@@ -1,6 +1,6 @@
 return {
 	"andweeb/presence.nvim",
-	event = "VeryLazy",
+	lazy = false,
 	opts = {
 		auto_update = true,
 		neovim_image_text = "(｡◕‿‿◕｡)",

@@ -15,6 +15,8 @@ return {
 			"saghen/blink.cmp",
 		},
 		config = function()
+			local detach_augroup = vim.api.nvim_create_augroup("lsp-detach", { clear = true })
+
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
 				callback = function(event)
@@ -22,7 +24,7 @@ return {
 
 					local map = function(keys, func, desc, mode)
 						mode = mode or "n"
-						vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+						vim.keymap.set(mode, keys, func, { buf = event.buf, desc = "LSP: " .. desc })
 					end
 
 					map("gd", builtin.lsp_definitions, "[G]oto [D]efinition")
@@ -40,33 +42,101 @@ return {
 					if client and client:supports_method("textDocument/documentHighlight", event.buf) then
 						local highlight_augroup = vim.api.nvim_create_augroup("lsp-highlight", { clear = false })
 						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-							buffer = event.buf,
+							buf = event.buf,
 							group = highlight_augroup,
 							callback = vim.lsp.buf.document_highlight,
 						})
 
 						vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-							buffer = event.buf,
+							buf = event.buf,
 							group = highlight_augroup,
 							callback = vim.lsp.buf.clear_references,
 						})
 
 						vim.api.nvim_create_autocmd("LspDetach", {
-							group = vim.api.nvim_create_augroup("lsp-detach", { clear = true }),
+							buf = event.buf,
+							group = detach_augroup,
 							callback = function(event2)
 								vim.lsp.buf.clear_references()
-								vim.api.nvim_clear_autocmds({ group = "lsp-highlight", buffer = event2.buf })
+								vim.api.nvim_clear_autocmds({ group = "lsp-highlight", buf = event2.buf })
 							end,
 						})
 					end
 
-					if client and client:supports_method("textDocument/inlayHint", event.buf) then
-						map("<leader>th", function()
-							vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
-						end, "[T]oggle Inlay [H]ints")
+					if client and client:supports_method("textDocument/foldingRange", event.buf) then
+						vim.wo.foldexpr = "v:lua.vim.lsp.foldexpr()"
 					end
 				end,
 			})
+
+			local lsp_servers = {
+				"vtsls",
+				"vue_ls",
+				"eslint",
+				"html",
+				"cssls",
+				"tailwindcss",
+				"emmet_language_server",
+				"jsonls",
+				"yamlls",
+				"lua_ls",
+				"gopls",
+				"pyright",
+				"ruff",
+				"rust_analyzer",
+				"sqlls",
+				"taplo",
+				"bashls",
+				"dockerls",
+				"docker_compose_language_service",
+				"marksman",
+				"astro",
+				"angularls",
+				"graphql",
+				"helm_ls",
+				"clangd",
+				"intelephense",
+			}
+
+			local tools = {
+				"prettierd",
+				"prettier",
+				"stylua",
+				"shfmt",
+				"shellcheck",
+				"hadolint",
+				"yamllint",
+				"actionlint",
+				"markdownlint-cli2",
+				"eslint_d",
+				"gofumpt",
+				"goimports",
+				"golines",
+				"black",
+				"isort",
+				"sqlfluff",
+				"sqruff",
+				"clang-format",
+				"debugpy",
+				"delve",
+				"codelldb",
+				"js-debug-adapter",
+				"bash-debug-adapter",
+			}
+
+			local capabilities = require("blink.cmp").get_lsp_capabilities()
+			vim.lsp.config("*", {
+				capabilities = capabilities,
+			})
+
+			local vue_language_server_path = vim.fn.stdpath("data")
+				.. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
+			local vue_plugin = {
+				name = "@vue/typescript-plugin",
+				location = vue_language_server_path,
+				languages = { "vue" },
+				configNamespace = "typescript",
+			}
 
 			---@type table<string, vim.lsp.Config>
 			local servers = {
@@ -94,19 +164,42 @@ return {
 				angularls = {},
 				vue_ls = {},
 				vtsls = {
-					filetypes = { "vue" },
+					filetypes = {
+						"javascript",
+						"javascriptreact",
+						"typescript",
+						"typescriptreact",
+						"vue",
+					},
 					settings = {
 						vtsls = {
 							tsserver = {
-								globalPlugins = {
-									{
-										name = "@vue/typescript-plugin",
-										location = vim.fn.stdpath("data")
-											.. "/mason/packages/vue-language-server/node_modules/@vue/language-server",
-										languages = { "vue" },
-										configNamespace = "typescript",
-									},
-								},
+								globalPlugins = { vue_plugin },
+							},
+						},
+						typescript = {
+							preferences = {
+								importModuleSpecifier = "non-relative",
+							},
+							inlayHints = {
+								parameterNames = { enabled = "all" },
+								parameterTypes = { enabled = true },
+								variableTypes = { enabled = true },
+								propertyDeclarationTypes = { enabled = true },
+								functionLikeReturnTypes = { enabled = true },
+								enumMemberValues = { enabled = true },
+							},
+						},
+						javascript = {
+							preferences = {
+								importModuleSpecifier = "non-relative",
+							},
+							inlayHints = {
+								parameterNames = { enabled = "all" },
+								parameterTypes = { enabled = true },
+								variableTypes = { enabled = true },
+								propertyDeclarationTypes = { enabled = true },
+								functionLikeReturnTypes = { enabled = true },
 							},
 						},
 					},
@@ -139,8 +232,11 @@ return {
 					},
 				},
 				yamlls = {
+					filetypes = { "yaml", "yaml.docker-compose", "yaml.gitlab", "yaml.helm-values", "yaml.ghaction" },
 					settings = {
+						redhat = { telemetry = { enabled = false } },
 						yaml = {
+							format = { enable = true },
 							validate = true,
 							keyOrdering = false,
 							schemaStore = {
@@ -227,58 +323,21 @@ return {
 				},
 			}
 
-			local ensure_installed = vim.tbl_keys(servers or {
-				"html",
-				"cssls",
-				"emmet_language_server",
-				"tailwindcss",
-				"eslint",
-				"astro",
-				"angularls",
-				"vue_ls",
-				"vtsls",
-				"graphql",
-				"jsonls",
-				"yamlls",
-				"taplo",
-				"dockerls",
-				"docker_compose_language_service",
-				"helm_ls",
-				"bashls",
-				"gopls",
-				"pyright",
-				"ruff",
-				"rust_analyzer",
-				"clangd",
-				"intelephense",
-				"sqlls",
-				"marksman",
-				"lua_ls",
-				"typescript-language-server",
-				"prettierd",
-				"prettier",
-				"stylua",
-				"shfmt",
-				"shellcheck",
-				"hadolint",
-				"yamllint",
-				"actionlint",
-				"gofumpt",
-				"goimports",
-				"golines",
-				"black",
-				"isort",
-				"sqlfluff",
-				"clang-format",
-			})
-			vim.list_extend(ensure_installed, {})
-
-			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
-
 			for name, server in pairs(servers) do
 				vim.lsp.config(name, server)
-				vim.lsp.enable(name)
 			end
+
+			require("mason-lspconfig").setup({
+				ensure_installed = lsp_servers,
+				automatic_enable = lsp_servers,
+			})
+
+			require("mason-tool-installer").setup({
+				ensure_installed = tools,
+				run_on_start = true,
+				start_delay = 3000,
+				debounce_hours = 12,
+			})
 		end,
 	},
 }

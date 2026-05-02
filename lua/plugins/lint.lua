@@ -1,19 +1,40 @@
 return {
 	"mfussenegger/nvim-lint",
-	event = { "BufReadPre", "BufNewFile" },
+	event = { "BufReadPost", "BufNewFile" },
 	config = function()
 		local lint = require("lint")
 		lint.linters_by_ft = {
-			markdown = { "markdownlint" },
+			javascript = { "eslint_d" },
+			javascriptreact = { "eslint_d" },
+			typescript = { "eslint_d" },
+			typescriptreact = { "eslint_d" },
+			vue = { "eslint_d" },
+			python = { "ruff" },
+			sh = { "shellcheck" },
+			bash = { "shellcheck" },
+			zsh = { "shellcheck" },
+			dockerfile = { "hadolint" },
+			yaml = { "yamllint" },
+			["yaml.ghaction"] = { "actionlint", "yamllint" },
+			markdown = { "markdownlint-cli2" },
+			sql = { "sqlfluff" },
 		}
 
+		lint.linters.sqlfluff.args = function()
+			return { "lint", "--dialect", vim.g.sqlfluff_dialect or "postgres", "--format=json", "-" }
+		end
+
 		local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
-		vim.api.nvim_create_autocmd({ "BufEnter", "BufWritePost", "InsertLeave" }, {
+		vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
 			group = lint_augroup,
-			callback = function()
-				if vim.bo.modifiable then
-					lint.try_lint()
+			callback = function(args)
+				if vim.bo[args.buf].buftype ~= "" or not vim.bo[args.buf].modifiable then
+					return
 				end
+
+				vim.api.nvim_buf_call(args.buf, function()
+					lint.try_lint()
+				end)
 			end,
 		})
 	end,

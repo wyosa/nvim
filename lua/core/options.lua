@@ -44,9 +44,20 @@ vim.o.cursorline = true
 vim.o.scrolloff = 10
 
 vim.o.confirm = true
+vim.o.winborder = "rounded"
+vim.o.pumborder = "rounded"
+vim.o.pummaxwidth = 80
 
 -- update buffer content when file changes externally
 vim.opt.autoread = true
+
+vim.opt.listchars = {
+	tab = "> ",
+	trail = ".",
+	extends = ">",
+	precedes = "<",
+	nbsp = "+",
+}
 
 -- fold
 vim.opt.foldmethod = "expr"
