@@ -31,6 +31,7 @@
 
 - Plugins are managed by `lazy.nvim`.
 - LSP servers are installed through `mason-lspconfig.nvim`.
-- Formatters, linters, and debug adapters are installed through `mason-tool-installer.nvim`.
+- Formatters and standalone lint tools are installed through `mason-tool-installer.nvim`.
+- Debug adapters are installed through `mason-nvim-dap.nvim`.
 - Formatting runs on every save through `conform.nvim`.
-- `vim-wakatime` and `presence.nvim` load on startup.
+- Editor diagnostics come from LSP plus `nvim-lint` for CI-like checks such as `actionlint`, `yamllint`, `hadolint`, `markdownlint-cli2`, `shellcheck`, and `sqlfluff`.

@@ -1,8 +1,10 @@
 return {
 	{
 		"echasnovski/mini.nvim",
-		event = "VeryLazy",
+		event = { "VeryLazy", "InsertEnter" },
 		config = function()
+			require("mini.pairs").setup()
+
 			-- Better Around/Inside textobjects
 			--
 			-- Examples:

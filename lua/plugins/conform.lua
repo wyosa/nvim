@@ -38,7 +38,7 @@ return {
 			graphql = { "prettierd", "prettier", stop_after_first = true },
 
 			go = { "goimports", "gofumpt", "golines" },
-			python = { "ruff_organize_imports", "ruff_format", "black", stop_after_first = false },
+			python = { "ruff_organize_imports", "ruff_format" },
 			rust = { "rustfmt" },
 			sh = { "shfmt" },
 			bash = { "shfmt" },

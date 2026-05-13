@@ -1,15 +1,9 @@
 return {
 	"mfussenegger/nvim-lint",
-	event = { "BufReadPost", "BufNewFile" },
+	event = { "BufReadPost", "BufNewFile", "BufWritePost" },
 	config = function()
 		local lint = require("lint")
 		lint.linters_by_ft = {
-			javascript = { "eslint_d" },
-			javascriptreact = { "eslint_d" },
-			typescript = { "eslint_d" },
-			typescriptreact = { "eslint_d" },
-			vue = { "eslint_d" },
-			python = { "ruff" },
 			sh = { "shellcheck" },
 			bash = { "shellcheck" },
 			zsh = { "shellcheck" },
@@ -25,7 +19,7 @@ return {
 		end
 
 		local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
-		vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
+		vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "InsertLeave" }, {
 			group = lint_augroup,
 			callback = function(args)
 				if vim.bo[args.buf].buftype ~= "" or not vim.bo[args.buf].modifiable then

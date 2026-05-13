@@ -44,9 +44,6 @@ vim.o.cursorline = true
 vim.o.scrolloff = 10
 
 vim.o.confirm = true
-vim.o.winborder = "rounded"
-vim.o.pumborder = "rounded"
-vim.o.pummaxwidth = 80
 
 -- update buffer content when file changes externally
 vim.opt.autoread = true
@@ -59,9 +56,6 @@ vim.opt.listchars = {
 	nbsp = "+",
 }
 
--- fold
-vim.opt.foldmethod = "expr"
-vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 vim.opt.foldenable = true
 vim.opt.foldlevel = 99
 vim.opt.foldlevelstart = 99

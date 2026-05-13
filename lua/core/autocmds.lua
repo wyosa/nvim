@@ -39,12 +39,3 @@ vim.api.nvim_create_autocmd("VimEnter", {
 		)
 	end,
 })
-
-vim.filetype.add({
-	pattern = {
-		[".*/%.github/workflows/.*%.yaml"] = "yaml.ghaction",
-		[".*/%.github/workflows/.*%.yml"] = "yaml.ghaction",
-		[".*/%.github/action%.yaml"] = "yaml.ghaction",
-		[".*/%.github/action%.yml"] = "yaml.ghaction",
-	},
-})

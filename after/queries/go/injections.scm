@@ -30,7 +30,7 @@
                     arguments: (argument_list (raw_string_literal) @injection.content))
                 ]
                 (#match? @comment "^//\\s*postgresql\\s*$|^/\\*\\s*postgresql\\s*\\*/$")
-                (#set! injection.language "postgresql"))
+                (#set! injection.language "sql"))
             
               ((comment) @comment
                 .
@@ -46,9 +46,8 @@
                     arguments: (argument_list (raw_string_literal) @injection.content))
                 ]
                 (#match? @comment "^//\\s*clickhouse\\s*$|^/\\*\\s*clickhouse\\s*\\*/$")
-                (#set! injection.language "clickhouse"))
-            
+                (#set! injection.language "sql"))
+
               ((raw_string_literal) @injection.content
                 (#match? @injection.content "^\\_s*\\c\\(select\\|insert\\|update\\|delete\\|with\\|create\\|alter\\|drop\\|truncate\\|merge\\)\\>")
                 (#set! injection.language "sql"))
-            

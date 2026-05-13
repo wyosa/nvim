@@ -10,11 +10,12 @@ return {
 				opts = {},
 			},
 			"mason-org/mason-lspconfig.nvim",
-			"WhoIsSethDaniel/mason-tool-installer.nvim",
 			{ "j-hui/fidget.nvim", opts = {} },
 			"saghen/blink.cmp",
 		},
 		config = function()
+			local lsp_highlight_buffers = {}
+			local highlight_augroup = vim.api.nvim_create_augroup("lsp-highlight", { clear = true })
 			local detach_augroup = vim.api.nvim_create_augroup("lsp-detach", { clear = true })
 
 			vim.api.nvim_create_autocmd("LspAttach", {
@@ -39,26 +40,40 @@ return {
 					map("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
 
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
-					if client and client:supports_method("textDocument/documentHighlight", event.buf) then
-						local highlight_augroup = vim.api.nvim_create_augroup("lsp-highlight", { clear = false })
+					if
+						client
+						and client:supports_method("textDocument/documentHighlight", event.buf)
+						and not lsp_highlight_buffers[event.buf]
+					then
+						lsp_highlight_buffers[event.buf] = true
 						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-							buf = event.buf,
+							buffer = event.buf,
 							group = highlight_augroup,
 							callback = vim.lsp.buf.document_highlight,
 						})
 
 						vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-							buf = event.buf,
+							buffer = event.buf,
 							group = highlight_augroup,
 							callback = vim.lsp.buf.clear_references,
 						})
 
 						vim.api.nvim_create_autocmd("LspDetach", {
-							buf = event.buf,
+							buffer = event.buf,
 							group = detach_augroup,
 							callback = function(event2)
+								for _, attached in ipairs(vim.lsp.get_clients({ bufnr = event2.buf })) do
+									if
+										attached.id ~= event2.data.client_id
+										and attached:supports_method("textDocument/documentHighlight", event2.buf)
+									then
+										return
+									end
+								end
+
 								vim.lsp.buf.clear_references()
-								vim.api.nvim_clear_autocmds({ group = "lsp-highlight", buf = event2.buf })
+								vim.api.nvim_clear_autocmds({ group = highlight_augroup, buffer = event2.buf })
+								lsp_highlight_buffers[event2.buf] = nil
 							end,
 						})
 					end
@@ -91,37 +106,10 @@ return {
 				"docker_compose_language_service",
 				"marksman",
 				"astro",
-				"angularls",
 				"graphql",
 				"helm_ls",
 				"clangd",
 				"intelephense",
-			}
-
-			local tools = {
-				"prettierd",
-				"prettier",
-				"stylua",
-				"shfmt",
-				"shellcheck",
-				"hadolint",
-				"yamllint",
-				"actionlint",
-				"markdownlint-cli2",
-				"eslint_d",
-				"gofumpt",
-				"goimports",
-				"golines",
-				"black",
-				"isort",
-				"sqlfluff",
-				"sqruff",
-				"clang-format",
-				"debugpy",
-				"delve",
-				"codelldb",
-				"js-debug-adapter",
-				"bash-debug-adapter",
 			}
 
 			local capabilities = require("blink.cmp").get_lsp_capabilities()
@@ -137,11 +125,29 @@ return {
 				languages = { "vue" },
 				configNamespace = "typescript",
 			}
+			local js_ts_settings = {
+				preferences = {
+					importModuleSpecifier = "non-relative",
+				},
+				inlayHints = {
+					parameterNames = { enabled = "all" },
+					parameterTypes = { enabled = true },
+					variableTypes = { enabled = true },
+					propertyDeclarationTypes = { enabled = true },
+					functionLikeReturnTypes = { enabled = true },
+					enumMemberValues = { enabled = true },
+				},
+			}
 
 			---@type table<string, vim.lsp.Config>
-			local servers = {
+			local server_configs = {
 				html = {},
 				cssls = {},
+				tailwindcss = {},
+				eslint = {},
+				vue_ls = {},
+				astro = {},
+				graphql = {},
 				emmet_language_server = {
 					filetypes = {
 						"astro",
@@ -158,11 +164,6 @@ return {
 						"vue",
 					},
 				},
-				tailwindcss = {},
-				eslint = {},
-				astro = {},
-				angularls = {},
-				vue_ls = {},
 				vtsls = {
 					filetypes = {
 						"javascript",
@@ -177,34 +178,10 @@ return {
 								globalPlugins = { vue_plugin },
 							},
 						},
-						typescript = {
-							preferences = {
-								importModuleSpecifier = "non-relative",
-							},
-							inlayHints = {
-								parameterNames = { enabled = "all" },
-								parameterTypes = { enabled = true },
-								variableTypes = { enabled = true },
-								propertyDeclarationTypes = { enabled = true },
-								functionLikeReturnTypes = { enabled = true },
-								enumMemberValues = { enabled = true },
-							},
-						},
-						javascript = {
-							preferences = {
-								importModuleSpecifier = "non-relative",
-							},
-							inlayHints = {
-								parameterNames = { enabled = "all" },
-								parameterTypes = { enabled = true },
-								variableTypes = { enabled = true },
-								propertyDeclarationTypes = { enabled = true },
-								functionLikeReturnTypes = { enabled = true },
-							},
-						},
+						typescript = js_ts_settings,
+						javascript = js_ts_settings,
 					},
 				},
-				graphql = {},
 				jsonls = {
 					settings = {
 						json = {
@@ -323,20 +300,13 @@ return {
 				},
 			}
 
-			for name, server in pairs(servers) do
-				vim.lsp.config(name, server)
+			for _, name in ipairs(lsp_servers) do
+				vim.lsp.config(name, server_configs[name] or {})
 			end
 
 			require("mason-lspconfig").setup({
 				ensure_installed = lsp_servers,
 				automatic_enable = lsp_servers,
-			})
-
-			require("mason-tool-installer").setup({
-				ensure_installed = tools,
-				run_on_start = true,
-				start_delay = 3000,
-				debounce_hours = 12,
 			})
 		end,
 	},

@@ -138,10 +138,6 @@ return {
 			return vim.fn.stdpath("data") .. "/mason/bin/" .. name
 		end
 
-		local function mason_opt(path)
-			return vim.fn.stdpath("data") .. "/mason/opt/" .. path
-		end
-
 		local function executable(name, fallback)
 			local path = vim.fn.exepath(name)
 			if path ~= "" then
@@ -149,13 +145,6 @@ return {
 			end
 
 			return fallback or name
-		end
-
-		local function split_args(prompt)
-			return function()
-				local input = vim.fn.input(prompt)
-				return vim.split(input, " +", { trimempty = true })
-			end
 		end
 
 		local function python_path()
@@ -181,9 +170,14 @@ return {
 		end
 
 		require("mason-nvim-dap").setup({
-			ensure_installed = {},
+			ensure_installed = { "python", "delve" },
 			automatic_installation = false,
-			handlers = {},
+			handlers = {
+				function(config)
+					config.configurations = {}
+					require("mason-nvim-dap").default_setup(config)
+				end,
+			},
 		})
 
 		dapui.setup({
@@ -224,11 +218,6 @@ return {
 			},
 		})
 
-		dap.adapters.python = {
-			type = "executable",
-			command = executable("debugpy-adapter", mason_bin("debugpy-adapter")),
-		}
-
 		dap.configurations.python = {
 			{
 				type = "python",
@@ -257,134 +246,5 @@ return {
 				justMyCode = false,
 			},
 		}
-
-		dap.adapters.codelldb = {
-			type = "server",
-			port = "${port}",
-			executable = {
-				command = executable("codelldb", mason_bin("codelldb")),
-				args = { "--port", "${port}" },
-			},
-		}
-
-		local codelldb_configurations = {
-			{
-				name = "LLDB: Launch executable",
-				type = "codelldb",
-				request = "launch",
-				program = function()
-					return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/target/debug/", "file")
-				end,
-				cwd = "${workspaceFolder}",
-				stopOnEntry = false,
-				args = split_args("Args: "),
-				console = "integratedTerminal",
-			},
-		}
-		dap.configurations.rust = codelldb_configurations
-		dap.configurations.c = codelldb_configurations
-		dap.configurations.cpp = codelldb_configurations
-
-		local js_debug_adapter = {
-			type = "server",
-			host = "127.0.0.1",
-			port = "${port}",
-			executable = {
-				command = executable("js-debug-adapter", mason_bin("js-debug-adapter")),
-				args = { "${port}" },
-			},
-		}
-
-		for _, adapter in ipairs({ "pwa-node", "pwa-chrome" }) do
-			dap.adapters[adapter] = js_debug_adapter
-		end
-
-		local js_configurations = {
-			{
-				type = "pwa-node",
-				request = "launch",
-				name = "Node: Launch current file",
-				program = "${file}",
-				cwd = "${workspaceFolder}",
-				sourceMaps = true,
-				console = "integratedTerminal",
-			},
-			{
-				type = "pwa-node",
-				request = "attach",
-				name = "Node: Attach process",
-				processId = require("dap.utils").pick_process,
-				cwd = "${workspaceFolder}",
-				sourceMaps = true,
-			},
-			{
-				type = "pwa-node",
-				request = "attach",
-				name = "Node: Attach port 9229",
-				address = "127.0.0.1",
-				port = 9229,
-				cwd = "${workspaceFolder}",
-				sourceMaps = true,
-			},
-			{
-				type = "pwa-node",
-				request = "launch",
-				name = "Node: Debug npm test current file",
-				runtimeExecutable = "npm",
-				runtimeArgs = { "test", "--", "${file}" },
-				cwd = "${workspaceFolder}",
-				sourceMaps = true,
-				console = "integratedTerminal",
-				internalConsoleOptions = "neverOpen",
-			},
-			{
-				type = "pwa-chrome",
-				request = "attach",
-				name = "Chrome: Attach localhost:9222",
-				address = "127.0.0.1",
-				port = 9222,
-				url = "http://localhost:3000",
-				webRoot = "${workspaceFolder}",
-				sourceMaps = true,
-			},
-		}
-
-		for _, filetype in ipairs({
-			"javascript",
-			"javascriptreact",
-			"typescript",
-			"typescriptreact",
-			"vue",
-			"astro",
-		}) do
-			dap.configurations[filetype] = js_configurations
-		end
-
-		dap.adapters.bash = {
-			type = "executable",
-			command = executable("bash-debug-adapter", mason_bin("bash-debug-adapter")),
-		}
-
-		local bash_configurations = {
-			{
-				type = "bash",
-				request = "launch",
-				name = "Bash: Launch current file",
-				program = "${file}",
-				cwd = "${fileDirname}",
-				pathBashdb = mason_opt("bashdb/bashdb"),
-				pathBashdbLib = mason_opt("bashdb"),
-				pathBash = executable("bash", "bash"),
-				pathCat = executable("cat", "cat"),
-				pathMkfifo = executable("mkfifo", "mkfifo"),
-				pathPkill = executable("pkill", "pkill"),
-				env = {},
-				args = {},
-				terminalKind = "integrated",
-			},
-		}
-		dap.configurations.sh = bash_configurations
-		dap.configurations.bash = bash_configurations
-		dap.configurations.zsh = bash_configurations
 	end,
 }
