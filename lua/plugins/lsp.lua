@@ -227,51 +227,11 @@ return {
 				},
 			}
 
-			local ensure_installed = vim.tbl_keys(servers or {
-				"html",
-				"cssls",
-				"emmet_language_server",
-				"tailwindcss",
-				"eslint",
-				"astro",
-				"angularls",
-				"vue_ls",
-				"vtsls",
-				"graphql",
-				"jsonls",
-				"yamlls",
-				"taplo",
-				"dockerls",
-				"docker_compose_language_service",
-				"helm_ls",
-				"bashls",
-				"gopls",
-				"pyright",
-				"ruff",
-				"rust_analyzer",
-				"clangd",
-				"intelephense",
-				"sqlls",
-				"marksman",
-				"lua_ls",
-				"typescript-language-server",
-				"prettierd",
-				"prettier",
+			local ensure_installed = vim.tbl_keys(servers)
+			vim.list_extend(ensure_installed, {
 				"stylua",
-				"shfmt",
-				"shellcheck",
-				"hadolint",
-				"yamllint",
-				"actionlint",
-				"gofumpt",
-				"goimports",
-				"golines",
-				"black",
-				"isort",
-				"sqlfluff",
-				"clang-format",
+				"markdownlint-cli2",
 			})
-			vim.list_extend(ensure_installed, {})
 
 			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
