@@ -3,7 +3,7 @@ vim.api.nvim_create_autocmd("TextYankPost", {
 	desc = "Highlight when yanking text",
 	group = vim.api.nvim_create_augroup("kickstart-hightlight-yank", { clear = true }),
 	callback = function()
-		vim.highlight.on_yank()
+		vim.hl.on_yank()
 	end,
 })
 
@@ -25,7 +25,15 @@ vim.api.nvim_create_autocmd("VimEnter", {
 				if ppid == nil or ppid == 1 then
 					timer:stop()
 					timer:close()
-					vim.cmd("quitall!")
+
+					for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+						if vim.bo[buf].modified then
+							vim.notify("Parent process exited; modified buffers remain open", vim.log.levels.WARN)
+							return
+						end
+					end
+
+					vim.cmd("quitall")
 				end
 			end)
 		)

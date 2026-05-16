@@ -4,12 +4,13 @@ return {
 		event = { "BufReadPre", "BufNewFile" },
 		opts = {
 			signcolumn = true,
+			attach_to_untracked = true,
 			on_attach = function(bufnr)
 				local gitsigns = require("gitsigns")
 
 				local function map(mode, l, r, opts)
 					opts = opts or {}
-					opts.buffer = bufnr
+					opts.buf = bufnr
 					vim.keymap.set(mode, l, r, opts)
 				end
 
@@ -46,10 +47,15 @@ return {
 				map("n", "<leader>hR", gitsigns.reset_buffer, { desc = "git [R]eset buffer" })
 				map("n", "<leader>hp", gitsigns.preview_hunk, { desc = "git [p]review hunk" })
 				map("n", "<leader>hb", gitsigns.blame_line, { desc = "git [b]lame line" })
+				map("n", "<leader>hB", gitsigns.blame, { desc = "git [B]lame buffer" })
 				map("n", "<leader>hd", gitsigns.diffthis, { desc = "git [d]iff against index" })
 				map("n", "<leader>hD", function()
 					gitsigns.diffthis("@")
 				end, { desc = "git [D]iff against last commit" })
+				map("n", "<leader>hq", function()
+					gitsigns.setqflist("all")
+				end, { desc = "git hunks to [q]uickfix" })
+				map("n", "<leader>hl", gitsigns.setloclist, { desc = "git hunks to [l]oclist" })
 				-- Toggles
 				map("n", "<leader>tb", gitsigns.toggle_current_line_blame, { desc = "[T]oggle git show [b]lame line" })
 				map("n", "<leader>tD", gitsigns.preview_hunk_inline, { desc = "[T]oggle git show [D]eleted" })

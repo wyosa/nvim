@@ -10,11 +10,14 @@ return {
 				opts = {},
 			},
 			"mason-org/mason-lspconfig.nvim",
-			"WhoIsSethDaniel/mason-tool-installer.nvim",
 			{ "j-hui/fidget.nvim", opts = {} },
 			"saghen/blink.cmp",
 		},
 		config = function()
+			local lsp_highlight_buffers = {}
+			local highlight_augroup = vim.api.nvim_create_augroup("lsp-highlight", { clear = true })
+			local detach_augroup = vim.api.nvim_create_augroup("lsp-detach", { clear = true })
+
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
 				callback = function(event)
@@ -22,7 +25,7 @@ return {
 
 					local map = function(keys, func, desc, mode)
 						mode = mode or "n"
-						vim.keymap.set(mode, keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+						vim.keymap.set(mode, keys, func, { buf = event.buf, desc = "LSP: " .. desc })
 					end
 
 					map("gd", builtin.lsp_definitions, "[G]oto [D]efinition")
@@ -37,8 +40,12 @@ return {
 					map("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
 
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
-					if client and client:supports_method("textDocument/documentHighlight", event.buf) then
-						local highlight_augroup = vim.api.nvim_create_augroup("lsp-highlight", { clear = false })
+					if
+						client
+						and client:supports_method("textDocument/documentHighlight", event.buf)
+						and not lsp_highlight_buffers[event.buf]
+					then
+						lsp_highlight_buffers[event.buf] = true
 						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
 							buffer = event.buf,
 							group = highlight_augroup,
@@ -52,26 +59,95 @@ return {
 						})
 
 						vim.api.nvim_create_autocmd("LspDetach", {
-							group = vim.api.nvim_create_augroup("lsp-detach", { clear = true }),
+							buffer = event.buf,
+							group = detach_augroup,
 							callback = function(event2)
+								for _, attached in ipairs(vim.lsp.get_clients({ bufnr = event2.buf })) do
+									if
+										attached.id ~= event2.data.client_id
+										and attached:supports_method("textDocument/documentHighlight", event2.buf)
+									then
+										return
+									end
+								end
+
 								vim.lsp.buf.clear_references()
-								vim.api.nvim_clear_autocmds({ group = "lsp-highlight", buffer = event2.buf })
+								vim.api.nvim_clear_autocmds({ group = highlight_augroup, buffer = event2.buf })
+								lsp_highlight_buffers[event2.buf] = nil
 							end,
 						})
 					end
 
-					if client and client:supports_method("textDocument/inlayHint", event.buf) then
-						map("<leader>th", function()
-							vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled({ bufnr = event.buf }))
-						end, "[T]oggle Inlay [H]ints")
+					if client and client:supports_method("textDocument/foldingRange", event.buf) then
+						vim.wo.foldexpr = "v:lua.vim.lsp.foldexpr()"
 					end
 				end,
 			})
 
+			local lsp_servers = {
+				"vtsls",
+				"vue_ls",
+				"eslint",
+				"html",
+				"cssls",
+				"tailwindcss",
+				"emmet_language_server",
+				"jsonls",
+				"yamlls",
+				"lua_ls",
+				"gopls",
+				"pyright",
+				"ruff",
+				"rust_analyzer",
+				"sqlls",
+				"taplo",
+				"bashls",
+				"dockerls",
+				"docker_compose_language_service",
+				"marksman",
+				"astro",
+				"graphql",
+				"helm_ls",
+				"clangd",
+				"intelephense",
+			}
+
+			local capabilities = require("blink.cmp").get_lsp_capabilities()
+			vim.lsp.config("*", {
+				capabilities = capabilities,
+			})
+
+			local vue_language_server_path = vim.fn.stdpath("data")
+				.. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
+			local vue_plugin = {
+				name = "@vue/typescript-plugin",
+				location = vue_language_server_path,
+				languages = { "vue" },
+				configNamespace = "typescript",
+			}
+			local js_ts_settings = {
+				preferences = {
+					importModuleSpecifier = "non-relative",
+				},
+				inlayHints = {
+					parameterNames = { enabled = "all" },
+					parameterTypes = { enabled = true },
+					variableTypes = { enabled = true },
+					propertyDeclarationTypes = { enabled = true },
+					functionLikeReturnTypes = { enabled = true },
+					enumMemberValues = { enabled = true },
+				},
+			}
+
 			---@type table<string, vim.lsp.Config>
-			local servers = {
+			local server_configs = {
 				html = {},
 				cssls = {},
+				tailwindcss = {},
+				eslint = {},
+				vue_ls = {},
+				astro = {},
+				graphql = {},
 				emmet_language_server = {
 					filetypes = {
 						"astro",
@@ -88,30 +164,24 @@ return {
 						"vue",
 					},
 				},
-				tailwindcss = {},
-				eslint = {},
-				astro = {},
-				angularls = {},
-				vue_ls = {},
 				vtsls = {
-					filetypes = { "vue" },
+					filetypes = {
+						"javascript",
+						"javascriptreact",
+						"typescript",
+						"typescriptreact",
+						"vue",
+					},
 					settings = {
 						vtsls = {
 							tsserver = {
-								globalPlugins = {
-									{
-										name = "@vue/typescript-plugin",
-										location = vim.fn.stdpath("data")
-											.. "/mason/packages/vue-language-server/node_modules/@vue/language-server",
-										languages = { "vue" },
-										configNamespace = "typescript",
-									},
-								},
+								globalPlugins = { vue_plugin },
 							},
 						},
+						typescript = js_ts_settings,
+						javascript = js_ts_settings,
 					},
 				},
-				graphql = {},
 				jsonls = {
 					settings = {
 						json = {
@@ -139,8 +209,11 @@ return {
 					},
 				},
 				yamlls = {
+					filetypes = { "yaml", "yaml.docker-compose", "yaml.gitlab", "yaml.helm-values", "yaml.ghaction" },
 					settings = {
+						redhat = { telemetry = { enabled = false } },
 						yaml = {
+							format = { enable = true },
 							validate = true,
 							keyOrdering = false,
 							schemaStore = {
@@ -227,18 +300,14 @@ return {
 				},
 			}
 
-			local ensure_installed = vim.tbl_keys(servers)
-			vim.list_extend(ensure_installed, {
-				"stylua",
-				"markdownlint-cli2",
-			})
-
-			require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
-
-			for name, server in pairs(servers) do
-				vim.lsp.config(name, server)
-				vim.lsp.enable(name)
+			for _, name in ipairs(lsp_servers) do
+				vim.lsp.config(name, server_configs[name] or {})
 			end
+
+			require("mason-lspconfig").setup({
+				ensure_installed = lsp_servers,
+				automatic_enable = lsp_servers,
+			})
 		end,
 	},
 }

@@ -2,6 +2,129 @@ return {
 	{
 		"nvim-telescope/telescope.nvim",
 		branch = "master",
+		cmd = "Telescope",
+		keys = {
+			{
+				"<leader>sh",
+				function()
+					require("telescope.builtin").help_tags()
+				end,
+				desc = "[S]earch [H]elp",
+			},
+			{
+				"<leader>sk",
+				function()
+					require("telescope.builtin").keymaps()
+				end,
+				desc = "[S]earch [K]eymaps",
+			},
+			{
+				"<leader>sf",
+				function()
+					require("telescope.builtin").find_files()
+				end,
+				desc = "[S]earch [F]iles",
+			},
+			{
+				"<leader>ss",
+				function()
+					require("telescope.builtin").builtin()
+				end,
+				desc = "[S]earch [S]elect Telescope",
+			},
+			{
+				"<leader>sw",
+				function()
+					require("telescope.builtin").grep_string()
+				end,
+				mode = { "n", "v" },
+				desc = "[S]earch current [W]ord",
+			},
+			{
+				"<leader>sg",
+				function()
+					require("telescope.builtin").live_grep()
+				end,
+				desc = "[S]earch by [G]rep",
+			},
+			{
+				"<leader>sG",
+				function()
+					require("plugins.telescope.multigrep").live_multigrep()
+				end,
+				desc = "[S]earch Multi [G]rep",
+			},
+			{
+				"<leader>sd",
+				function()
+					require("telescope.builtin").diagnostics()
+				end,
+				desc = "[S]earch [D]iagnostics",
+			},
+			{
+				"<leader>sr",
+				function()
+					require("telescope.builtin").resume()
+				end,
+				desc = "[S]earch [R]esume",
+			},
+			{
+				"<leader>s.",
+				function()
+					require("telescope.builtin").oldfiles()
+				end,
+				desc = "[S]earch Recent Files",
+			},
+			{
+				"<leader>sc",
+				function()
+					require("telescope.builtin").commands()
+				end,
+				desc = "[S]earch [C]ommands",
+			},
+			{
+				"<leader><leader>",
+				function()
+					require("telescope.builtin").buffers()
+				end,
+				desc = "Find existing buffers",
+			},
+			{
+				"<leader>sa",
+				function()
+					require("telescope.builtin").find_files({ hidden = true })
+				end,
+				desc = "[S]earch [A]ll hidden",
+			},
+			{
+				"<leader>sA",
+				function()
+					require("telescope.builtin").find_files({ hidden = true, no_ignore = true })
+				end,
+				desc = "[S]earch [A]bsolutely all",
+			},
+			{
+				"<leader>sv",
+				function()
+					require("telescope.builtin").git_files()
+				end,
+				desc = "[S]earch [V]ersioned",
+			},
+			{
+				"<leader>su",
+				function()
+					require("telescope.builtin").git_status()
+				end,
+				desc = "[S]earch [U]ncommitted",
+			},
+			{
+				"<leader>z=",
+				function()
+					require("telescope.builtin").spell_suggest()
+				end,
+				desc = "Spell Suggestions",
+			},
+		},
 		dependencies = {
 			"nvim-lua/plenary.nvim",
 			{ "nvim-telescope/telescope-fzf-native.nvim", build = "make" },
@@ -10,6 +133,13 @@ return {
 		},
 
 		config = function()
+			local function open_with_trouble(...)
+				local ok, trouble = pcall(require, "trouble.sources.telescope")
+				if ok then
+					trouble.open(...)
+				end
+			end
+
 			require("telescope").setup({
 				defaults = {
 					layout_config = {
@@ -20,6 +150,10 @@ return {
 							height = 25,
 							preview_cutoff = 120,
 						},
+					},
+					mappings = {
+						i = { ["<C-t>"] = open_with_trouble },
+						n = { ["<C-t>"] = open_with_trouble },
 					},
 				},
 
@@ -39,31 +173,6 @@ return {
 
 			pcall(require("telescope").load_extension, "fzf")
 			pcall(require("telescope").load_extension, "ui-select")
-
-			local builtin = require("telescope.builtin")
-
-			vim.keymap.set("n", "<leader>sh", builtin.help_tags, { desc = "[S]earch [H]elp" })
-			vim.keymap.set("n", "<leader>sk", builtin.keymaps, { desc = "[S]earch [K]eymaps" })
-			vim.keymap.set("n", "<leader>sf", builtin.find_files, { desc = "[S]earch [F]iles" })
-			vim.keymap.set("n", "<leader>ss", builtin.builtin, { desc = "[S]earch [S]elect Telescope" })
-			vim.keymap.set({ "n", "v" }, "<leader>sw", builtin.grep_string, { desc = "[S]earch current [W]ord" })
-			vim.keymap.set("n", "<leader>sg", builtin.live_grep, { desc = "[S]earch by [G]rep" })
-			vim.keymap.set("n", "<leader>sd", builtin.diagnostics, { desc = "[S]earch [D]iagnostics" })
-			vim.keymap.set("n", "<leader>sr", builtin.resume, { desc = "[S]earch [R]esume" })
-			vim.keymap.set("n", "<leader>s.", builtin.oldfiles, { desc = "[S]earch Recent Files" })
-			vim.keymap.set("n", "<leader>sc", builtin.commands, { desc = "[S]earch [C]ommands" })
-			vim.keymap.set("n", "<leader><leader>", builtin.buffers, { desc = "[ ] Find existing buffers" })
-			vim.keymap.set("n", "<space>sa", function()
-				builtin.find_files({
-					hidden = true,
-					no_ignore = true,
-				})
-			end, { desc = "[S]earch [A]ll" })
-			vim.keymap.set("n", "<leader>sv", builtin.git_files, { desc = "[S]earch [V]ersioned" })
-			vim.keymap.set("n", "<leader>su", builtin.git_status, { desc = "[S]earch [U]ncommitted" })
-			vim.keymap.set("n", "<leader>ss", builtin.spell_suggest, { desc = "[S]pell [S]uggest" })
-
-			require("plugins.telescope.multigrep").setup()
 		end,
 	},
 }

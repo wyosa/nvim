@@ -48,9 +48,14 @@ vim.o.confirm = true
 -- update buffer content when file changes externally
 vim.opt.autoread = true
 
--- fold
-vim.opt.foldmethod = "expr"
-vim.opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+vim.opt.listchars = {
+	tab = "> ",
+	trail = ".",
+	extends = ">",
+	precedes = "<",
+	nbsp = "+",
+}
+
 vim.opt.foldenable = true
 vim.opt.foldlevel = 99
 vim.opt.foldlevelstart = 99

@@ -5,90 +5,106 @@ return {
 		lazy = false,
 		build = ":TSUpdate",
 		config = function()
-			local runtime_files = vim.api.nvim_get_runtime_file("lua/nvim-treesitter/init.lua", false)
-			local runtime_root = runtime_files[1] and vim.fn.fnamemodify(runtime_files[1], ":h:h:h") or nil
-			local runtime_queries = runtime_root and (runtime_root .. "/runtime") or nil
-			if runtime_queries and not vim.tbl_contains(vim.opt.rtp:get(), runtime_queries) then
-				vim.opt.rtp:append(runtime_queries)
+			local treesitter = require("nvim-treesitter")
+			local languages = {
+				"bash",
+				"c",
+				"css",
+				"diff",
+				"dockerfile",
+				"fish",
+				"gitcommit",
+				"gitignore",
+				"go",
+				"gomod",
+				"gosum",
+				"graphql",
+				"html",
+				"javascript",
+				"json",
+				"jsonc",
+				"lua",
+				"luadoc",
+				"markdown",
+				"markdown_inline",
+				"python",
+				"query",
+				"regex",
+				"rust",
+				"sql",
+				"toml",
+				"tsx",
+				"typescript",
+				"vim",
+				"vimdoc",
+				"vue",
+				"xml",
+				"yaml",
+				"zsh",
+				"angular",
+				"astro",
+				"php",
+				"scss",
+				"tmux",
+			}
+
+			treesitter.setup()
+
+			local available = {}
+			for _, language in ipairs(treesitter.get_available()) do
+				available[language] = true
 			end
 
-			require("nvim-treesitter").setup({
-				ensure_installed = {
-					"sql",
-					"postgresql",
-					"clickhouse",
-					"go",
-					"typescript",
-					"javascript",
-					"lua",
-					"python",
-					"php",
-					"c",
-					"rust",
-					"tsx",
-					"vue",
-					"angular",
-					"html",
-					"css",
-					"scss",
-					"vim",
-					"markdown",
-					"json",
-					"yaml",
-					"xml",
-					"toml",
-					"bash",
-					"zsh",
-					"fish",
-					"tmux",
-					"dockerfile",
-					"gomod",
-					"gosum",
-				},
-				auto_install = true,
-			})
+			local to_install = {}
+			for _, language in ipairs(languages) do
+				if available[language] then
+					table.insert(to_install, language)
+				end
+			end
+			treesitter.install(to_install)
 
-			-- Enable highlighting for all supported filetypes automatically
+			pcall(vim.treesitter.language.register, "yaml", "yaml.ghaction")
+
 			vim.api.nvim_create_autocmd("FileType", {
 				pattern = {
-					"sql",
-					"postgresql",
-					"clickhouse",
-					"go",
-					"typescript",
-					"javascript",
-					"lua",
-					"python",
-					"php",
-					"c",
-					"rust",
-					"tsx",
-					"vue",
-					"angular",
-					"html",
-					"css",
-					"scss",
-					"vim",
-					"markdown",
-					"json",
-					"yaml",
-					"xml",
-					"toml",
+					"astro",
 					"bash",
-					"zsh",
-					"fish",
-					"tmux",
+					"c",
+					"css",
 					"dockerfile",
+					"go",
 					"gomod",
 					"gosum",
+					"html",
+					"javascript",
+					"javascriptreact",
+					"json",
+					"jsonc",
+					"lua",
+					"markdown",
+					"php",
+					"python",
+					"rust",
+					"scss",
+					"sql",
+					"toml",
+					"typescript",
+					"typescriptreact",
+					"vim",
+					"vue",
+					"xml",
+					"yaml",
+					"yaml.ghaction",
+					"zsh",
 				},
 				callback = function(args)
-					local buf = args.buf
-					if vim.bo[buf].buftype == "" then
-						vim.schedule(function()
-							pcall(vim.treesitter.start, buf)
-						end)
+					if vim.bo[args.buf].buftype ~= "" then
+						return
 					end
+
+					pcall(vim.treesitter.start, args.buf)
+					vim.wo.foldmethod = "expr"
+					vim.wo.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 				end,
 			})
 		end,
