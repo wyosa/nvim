@@ -22,6 +22,32 @@ return {
 			"--format=json",
 			"-",
 		}
+
+		local function linter_is_available(linter)
+			local cmd = linter.cmd
+			if type(cmd) == "function" then
+				local ok, result = pcall(cmd)
+				if not ok then
+					vim.notify_once(
+						("Skipping %s: unable to resolve linter command"):format(linter.name),
+						vim.log.levels.WARN
+					)
+					return false
+				end
+				cmd = result
+			end
+
+			if not cmd or vim.fn.executable(cmd) == 0 then
+				vim.notify_once(
+					("Skipping %s: %s is not executable"):format(linter.name, cmd or "missing command"),
+					vim.log.levels.WARN
+				)
+				return false
+			end
+
+			return true
+		end
+
 		local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
 		vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "InsertLeave" }, {
 			group = lint_augroup,
@@ -30,10 +56,9 @@ return {
 					return
 				end
 				vim.api.nvim_buf_call(args.buf, function()
-					lint.try_lint()
+					lint.try_lint(nil, { filter = linter_is_available })
 				end)
 			end,
 		})
 	end,
-
 }
