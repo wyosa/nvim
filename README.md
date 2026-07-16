@@ -6,6 +6,24 @@
 /_/ /_/|___/_/_/ /_/ /_/
 ```
 
+### Install
+
+Linux:
+
+```sh
+mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}"
+git clone https://github.com/wyosa/nvim.git "${XDG_CONFIG_HOME:-$HOME/.config}/nvim"
+nvim
+```
+
+macOS:
+
+```sh
+mkdir -p "$HOME/.config"
+git clone https://github.com/wyosa/nvim.git "$HOME/.config/nvim"
+nvim
+```
+
 ### Requirements
 
 - Neovim `0.12.2+`
