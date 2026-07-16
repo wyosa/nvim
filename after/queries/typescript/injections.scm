@@ -45,7 +45,7 @@
      value: [
              (string(string_fragment)@injection.content) 
              (template_string(string_fragment)@injection.content)
-             ]@injection.content)  
+             ])
    )
   (#match? @comment "^//+( )*[sS][qQ][lL]( )*")
   (#set! injection.language "sql")
@@ -60,7 +60,7 @@
      value: [
              (string(string_fragment)@injection.content) 
              (template_string(string_fragment)@injection.content)
-             ]@injection.content)  
+             ])
    )
   (#match? @comment "^//+( )*[jJ][aA][vV][aA][sS][cC][rR][iI][pP][tT]( )*")
   (#set! injection.language "javascript")
@@ -75,7 +75,7 @@
      value: [
              (string(string_fragment)@injection.content) 
              (template_string(string_fragment)@injection.content)
-             ]@injection.content)  
+             ])
    )
   (#match? @comment "^//+( )*[tT][yY][pP][eE][sS][cC][rR][iI][pP][tT]( )*")
   (#set! injection.language "typescript")
@@ -90,7 +90,7 @@
      value: [
              (string(string_fragment)@injection.content) 
              (template_string(string_fragment)@injection.content)
-             ]@injection.content)  
+             ])
    )
   (#match? @comment "^//+( )*[hH][tT][mM][lL]( )*")
   (#set! injection.language "html")
@@ -105,7 +105,7 @@
      value: [
              (string(string_fragment)@injection.content) 
              (template_string(string_fragment)@injection.content)
-             ]@injection.content)  
+             ])
    )
   (#match? @comment "^//+( )*[cC][sS][sS]( )*")
   (#set! injection.language "css")
@@ -120,9 +120,8 @@
      value: [
              (string(string_fragment)@injection.content) 
              (template_string(string_fragment)@injection.content)
-             ]@injection.content)  
+             ])
    )
   (#match? @comment "^//+( )*[pP][yY][tT][hH][oO][nN]( )*")
   (#set! injection.language "python")
  )
-        

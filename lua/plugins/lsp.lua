@@ -1,6 +1,7 @@
 return {
 	{
 		"neovim/nvim-lspconfig",
+		event = { "BufReadPre", "BufNewFile" },
 		dependencies = {
 			{
 				"mason-org/mason.nvim",
@@ -17,23 +18,63 @@ return {
 			local lsp_highlight_buffers = {}
 			local highlight_augroup = vim.api.nvim_create_augroup("lsp-highlight", { clear = true })
 			local detach_augroup = vim.api.nvim_create_augroup("lsp-detach", { clear = true })
+			local folding_augroup = vim.api.nvim_create_augroup("lsp-folding", { clear = true })
+			local function set_folds(bufnr, foldexpr, foldmethod)
+				for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
+					vim.wo[win][0].foldmethod = foldmethod
+					vim.wo[win][0].foldexpr = foldexpr
+				end
+			end
+
+			vim.api.nvim_create_autocmd("BufWinEnter", {
+				group = folding_augroup,
+				callback = function(event)
+					if next(vim.lsp.get_clients({ bufnr = event.buf, method = "textDocument/foldingRange" })) then
+						set_folds(event.buf, "v:lua.vim.lsp.foldexpr()", "expr")
+					end
+				end,
+			})
+
+			vim.api.nvim_create_autocmd("LspDetach", {
+				group = folding_augroup,
+				callback = function(event)
+					for _, client in ipairs(vim.lsp.get_clients({ bufnr = event.buf })) do
+						if
+							client.id ~= event.data.client_id
+							and client:supports_method("textDocument/foldingRange", event.buf)
+						then
+							return
+						end
+					end
+
+					local ok, parser = pcall(vim.treesitter.get_parser, event.buf)
+					if ok and parser then
+						set_folds(event.buf, "v:lua.vim.treesitter.foldexpr()", "expr")
+					else
+						set_folds(event.buf, "0", "manual")
+					end
+				end,
+			})
 
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
 				callback = function(event)
-					local builtin = require("telescope.builtin")
-
 					local map = function(keys, func, desc, mode)
 						mode = mode or "n"
 						vim.keymap.set(mode, keys, func, { buf = event.buf, desc = "LSP: " .. desc })
 					end
+					local telescope = function(picker)
+						return function()
+							require("telescope.builtin")[picker]()
+						end
+					end
 
-					map("gd", builtin.lsp_definitions, "[G]oto [D]efinition")
-					map("gr", builtin.lsp_references, "[G]oto [R]eferences")
-					map("gI", builtin.lsp_implementations, "[G]oto [I]mplementation")
-					map("<leader>D", builtin.lsp_type_definitions, "Type [D]efinition")
-					map("<leader>ds", builtin.lsp_document_symbols, "[D]ocument [S]ymbols")
-					map("<leader>ws", builtin.lsp_dynamic_workspace_symbols, "[W]orkspace [S]ymbols")
+					map("gd", telescope("lsp_definitions"), "[G]oto [D]efinition")
+					map("gr", telescope("lsp_references"), "[G]oto [R]eferences")
+					map("gI", telescope("lsp_implementations"), "[G]oto [I]mplementation")
+					map("<leader>D", telescope("lsp_type_definitions"), "Type [D]efinition")
+					map("<leader>ds", telescope("lsp_document_symbols"), "[D]ocument [S]ymbols")
+					map("<leader>ws", telescope("lsp_dynamic_workspace_symbols"), "[W]orkspace [S]ymbols")
 					map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
 					map("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction", { "n", "x" })
 					map("K", vim.lsp.buf.hover, "Hover Documentation")
@@ -79,7 +120,7 @@ return {
 					end
 
 					if client and client:supports_method("textDocument/foldingRange", event.buf) then
-						vim.wo.foldexpr = "v:lua.vim.lsp.foldexpr()"
+						set_folds(event.buf, "v:lua.vim.lsp.foldexpr()", "expr")
 					end
 				end,
 			})
@@ -287,7 +328,7 @@ return {
 							},
 							workspace = {
 								checkThirdParty = false,
-								library = vim.tbl_extend("force", vim.api.nvim_get_runtime_file("", true), {
+								library = vim.list_extend(vim.api.nvim_get_runtime_file("", true), {
 									"${3rd}/luv/library",
 									"${3rd}/busted/library",
 								}),

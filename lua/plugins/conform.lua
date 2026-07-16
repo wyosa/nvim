@@ -42,16 +42,18 @@ return {
 			rust = { "rustfmt" },
 			sh = { "shfmt" },
 			bash = { "shfmt" },
-			zsh = { "shfmt" },
 			sql = { "sqlfluff" },
-
-			["_"] = { "trim_whitespace", "trim_newlines" },
 		},
 		formatters = {
 			sqlfluff = {
 				require_cwd = false,
 				args = function()
-					return { "fix", "--dialect", vim.g.sqlfluff_dialect or "postgres", "-" }
+					local args = { "fix" }
+					if vim.g.sqlfluff_dialect then
+						vim.list_extend(args, { "--dialect", vim.g.sqlfluff_dialect })
+					end
+					table.insert(args, "-")
+					return args
 				end,
 			},
 		},

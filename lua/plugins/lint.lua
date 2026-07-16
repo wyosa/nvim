@@ -7,21 +7,16 @@ return {
 		lint.linters_by_ft = {
 			sh = { "shellcheck" },
 			bash = { "shellcheck" },
-			zsh = { "shellcheck" },
 			dockerfile = { "hadolint" },
 			yaml = { "yamllint" },
 			["yaml.ghaction"] = { "actionlint", "yamllint" },
 			markdown = { "markdownlint-cli2" },
 			sql = { "sqlfluff" },
 		}
-		lint.linters.sqlfluff.args = {
-			"lint",
-			function()
-				return "--dialect=" .. (vim.g.sqlfluff_dialect or "postgres")
-			end,
-			"--format=json",
-			"-",
-		}
+		lint.linters.sqlfluff.args = { "lint", "--format=json", "-" }
+		if vim.g.sqlfluff_dialect then
+			table.insert(lint.linters.sqlfluff.args, 2, "--dialect=" .. vim.g.sqlfluff_dialect)
+		end
 
 		local function linter_is_available(linter)
 			local cmd = linter.cmd
@@ -49,15 +44,39 @@ return {
 		end
 
 		local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
+		local lint_tokens = {}
+		local last_linted = {}
+		local function schedule_lint(bufnr)
+			local tick = vim.api.nvim_buf_get_changedtick(bufnr)
+			if last_linted[bufnr] == tick then
+				return
+			end
+
+			lint_tokens[bufnr] = (lint_tokens[bufnr] or 0) + 1
+			local token = lint_tokens[bufnr]
+			vim.defer_fn(function()
+				if
+					not vim.api.nvim_buf_is_valid(bufnr)
+					or lint_tokens[bufnr] ~= token
+					or vim.api.nvim_buf_get_changedtick(bufnr) ~= tick
+				then
+					return
+				end
+
+				last_linted[bufnr] = tick
+				vim.api.nvim_buf_call(bufnr, function()
+					lint.try_lint(nil, { filter = linter_is_available })
+				end)
+			end, 200)
+		end
+
 		vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost", "InsertLeave" }, {
 			group = lint_augroup,
 			callback = function(args)
 				if vim.bo[args.buf].buftype ~= "" or not vim.bo[args.buf].modifiable then
 					return
 				end
-				vim.api.nvim_buf_call(args.buf, function()
-					lint.try_lint(nil, { filter = linter_is_available })
-				end)
+				schedule_lint(args.buf)
 			end,
 		})
 	end,
