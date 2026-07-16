@@ -8,4 +8,6 @@ require("core.options")
 require("core.diagnostic")
 require("core.keymaps")
 require("core.autocmds")
-require("core.lazy")
+if vim.env.NVIM_CONFIG_TEST ~= "1" then
+	require("core.lazy")
+end
