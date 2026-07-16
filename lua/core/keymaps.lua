@@ -16,10 +16,44 @@ vim.keymap.set("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower win
 vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
 
 -- Split resize.
-vim.keymap.set("n", "<M-h>", "<cmd>vertical resize -3<CR>", { desc = "Resize split left" })
-vim.keymap.set("n", "<M-l>", "<cmd>vertical resize +3<CR>", { desc = "Resize split right" })
-vim.keymap.set("n", "<M-j>", "<cmd>resize +3<CR>", { desc = "Resize split down" })
-vim.keymap.set("n", "<M-k>", "<cmd>resize -3<CR>", { desc = "Resize split up" })
+local function resize_split(direction)
+	local current = vim.api.nvim_get_current_win()
+	local vertical = direction == "h" or direction == "l"
+	local negative = vertical and "h" or "k"
+	local positive = vertical and "l" or "j"
+	local negative_win = vim.fn.win_getid(vim.fn.winnr(negative))
+	local positive_win = vim.fn.win_getid(vim.fn.winnr(positive))
+	local target
+
+	if direction == negative then
+		target = negative_win ~= current and negative_win or positive_win ~= current and current or nil
+	else
+		target = positive_win ~= current and current or negative_win ~= current and negative_win or nil
+	end
+
+	if not target then
+		return
+	end
+
+	local command = vertical and "vertical resize " or "resize "
+	local amount = direction == negative and "-3" or "+3"
+	vim.api.nvim_win_call(target, function()
+		vim.cmd(command .. amount)
+	end)
+end
+
+vim.keymap.set("n", "<M-h>", function()
+	resize_split("h")
+end, { desc = "Move split border left" })
+vim.keymap.set("n", "<M-l>", function()
+	resize_split("l")
+end, { desc = "Move split border right" })
+vim.keymap.set("n", "<M-j>", function()
+	resize_split("j")
+end, { desc = "Move split border down" })
+vim.keymap.set("n", "<M-k>", function()
+	resize_split("k")
+end, { desc = "Move split border up" })
 
 vim.keymap.set("n", "<leader>td", function()
 	vim.diagnostic.enable(not vim.diagnostic.is_enabled())
