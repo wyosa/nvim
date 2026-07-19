@@ -4,5 +4,7 @@ func main() {
 	seed := 0
 	// sql
 	query := `SELECT * FROM users`
-	_, _ = seed, query
+	// sql
+	plan := `EXPLAIN SELECT * FROM users`
+	_, _, _ = seed, query, plan
 }

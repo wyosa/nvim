@@ -22,15 +22,6 @@ local function dap_status()
 	return dap.status()
 end
 
-local function lazy_updates()
-	local ok, status = pcall(require, "lazy.status")
-	if ok and status.has_updates() then
-		return status.updates()
-	end
-
-	return ""
-end
-
 return {
 	{
 		"nvim-lualine/lualine.nvim",
@@ -52,14 +43,12 @@ return {
 					"diagnostics",
 					lsp_clients,
 					dap_status,
-					lazy_updates,
 					"encoding",
 					"filetype",
 				},
 			},
 			extensions = {
 				"neo-tree",
-				"fzf",
 				"lazy",
 				"quickfix",
 			},

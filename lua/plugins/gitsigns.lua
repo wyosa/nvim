@@ -58,7 +58,7 @@ return {
 				map("n", "<leader>hl", gitsigns.setloclist, { desc = "git hunks to [l]oclist" })
 				-- Toggles
 				map("n", "<leader>tb", gitsigns.toggle_current_line_blame, { desc = "[T]oggle git show [b]lame line" })
-				map("n", "<leader>tD", gitsigns.preview_hunk_inline, { desc = "[T]oggle git show [D]eleted" })
+				map("n", "<leader>tD", gitsigns.preview_hunk_inline, { desc = "Preview [D]eleted lines inline" })
 			end,
 		},
 	},

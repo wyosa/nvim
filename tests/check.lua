@@ -67,7 +67,10 @@ local function check_injection(language, expected_node, expected_matches)
 			end
 		end
 	end
-	assert(found >= expected_matches, "SQL injection not found for " .. language)
+	assert(
+		found == expected_matches,
+		("Expected %d SQL injections for %s, found %d"):format(expected_matches, language, found)
+	)
 	vim.api.nvim_buf_delete(bufnr, { force = true })
 end
 

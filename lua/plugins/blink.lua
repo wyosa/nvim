@@ -1,6 +1,6 @@
 return {
 	"saghen/blink.cmp",
-	event = "InsertEnter",
+	event = { "InsertEnter", "CmdlineEnter" },
 	version = "1.*",
 	opts = {
 		keymap = { preset = "default" },
@@ -14,7 +14,7 @@ return {
 		},
 		sources = { default = { "lsp", "path", "snippets", "buffer" } },
 		snippets = { preset = "default" },
-		fuzzy = { implementation = "prefer_rust" },
+		fuzzy = { implementation = vim.env.NVIM_CONFIG_TEST == "smoke" and "lua" or "prefer_rust" },
 		signature = { enabled = true },
 	},
 }

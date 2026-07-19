@@ -49,10 +49,6 @@ local live_multigrep = function(opts)
 		:find()
 end
 
-M.setup = function()
-	vim.keymap.set("n", "<leader>sG", live_multigrep, { desc = "[S]earch Multi [G]rep" })
-end
-
 M.live_multigrep = live_multigrep
 
 return M

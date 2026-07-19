@@ -133,6 +133,7 @@ return {
 	config = function()
 		local dap = require("dap")
 		local dapui = require("dapui")
+		local smoke_test = vim.env.NVIM_CONFIG_TEST == "smoke"
 
 		local function mason_bin(name)
 			return vim.fn.stdpath("data") .. "/mason/bin/" .. name
@@ -170,7 +171,7 @@ return {
 		end
 
 		require("mason-nvim-dap").setup({
-			ensure_installed = { "python", "delve" },
+			ensure_installed = smoke_test and {} or { "python", "delve" },
 			automatic_installation = false,
 			handlers = {
 				function(config)

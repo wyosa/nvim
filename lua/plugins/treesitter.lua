@@ -19,6 +19,7 @@ return {
 				"gomod",
 				"gosum",
 				"graphql",
+				"helm",
 				"html",
 				"javascript",
 				"json",
@@ -85,6 +86,7 @@ return {
 				"gomod",
 				"gosum",
 				"graphql",
+				"helm",
 				"html",
 				"htmlangular",
 				"javascript",
@@ -128,29 +130,18 @@ return {
 					return
 				end
 
-				local foldexpr = next(vim.lsp.get_clients({
-					bufnr = bufnr,
-					method = "textDocument/foldingRange",
-				})) and "v:lua.vim.lsp.foldexpr()" or "v:lua.vim.treesitter.foldexpr()"
-				for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
-					vim.wo[win][0].foldmethod = "expr"
-					vim.wo[win][0].foldexpr = foldexpr
-				end
+				require("core.folds").update(bufnr)
 			end
 
+			local treesitter_augroup = vim.api.nvim_create_augroup("treesitter", { clear = true })
 			vim.api.nvim_create_autocmd("FileType", {
+				group = treesitter_augroup,
 				pattern = filetypes,
 				callback = function(args)
 					start(args.buf)
 				end,
 			})
-			vim.api.nvim_create_autocmd("BufWinEnter", {
-				callback = function(args)
-					start(args.buf)
-				end,
-			})
-
-			if #to_install > 0 then
+			if #to_install > 0 and vim.env.NVIM_CONFIG_TEST ~= "smoke" then
 				treesitter.install(to_install):await(function(err)
 					vim.schedule(function()
 						if err then

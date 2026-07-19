@@ -13,11 +13,10 @@ end)
 vim.o.breakindent = true
 vim.o.undofile = true
 
--- Swap files can be annoying with multiple nvim instances and file explorers.
--- We rely on undo + git instead.
-vim.o.swapfile = false
+-- Protect unsaved changes and interrupted writes.
+vim.o.swapfile = true
 vim.o.backup = false
-vim.o.writebackup = false
+vim.o.writebackup = true
 
 -- Tabs.
 vim.o.tabstop = 3
@@ -29,7 +28,7 @@ vim.o.expandtab = true
 vim.o.ignorecase = true
 vim.o.smartcase = true
 
-vim.o.signcolumn = "yes:1"
+vim.o.signcolumn = "yes:2"
 vim.opt.fillchars:append({ eob = " " })
 vim.o.updatetime = 250
 vim.o.timeoutlen = 300

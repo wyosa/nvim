@@ -1,7 +1,89 @@
 return {
 	{
 		"neovim/nvim-lspconfig",
-		event = { "BufReadPre", "BufNewFile" },
+		ft = {
+			"aspnetcorerazor",
+			"astro",
+			"astro-markdown",
+			"bash",
+			"blade",
+			"c",
+			"clojure",
+			"cpp",
+			"css",
+			"cuda",
+			"django-html",
+			"dockerfile",
+			"edge",
+			"eelixir",
+			"ejs",
+			"elixir",
+			"erb",
+			"eruby",
+			"go",
+			"gohtml",
+			"gohtmltmpl",
+			"gomod",
+			"gotmpl",
+			"gowork",
+			"graphql",
+			"haml",
+			"handlebars",
+			"hbs",
+			"heex",
+			"helm",
+			"html",
+			"html-eex",
+			"htmlangular",
+			"htmldjango",
+			"jade",
+			"javascript",
+			"javascriptreact",
+			"json",
+			"jsonc",
+			"leaf",
+			"less",
+			"liquid",
+			"lua",
+			"markdown",
+			"markdown.mdx",
+			"mdx",
+			"mysql",
+			"mustache",
+			"njk",
+			"nunjucks",
+			"objc",
+			"objcpp",
+			"php",
+			"postcss",
+			"proto",
+			"pug",
+			"python",
+			"razor",
+			"reason",
+			"rescript",
+			"rust",
+			"sass",
+			"scss",
+			"sh",
+			"slim",
+			"sql",
+			"stylus",
+			"sugarss",
+			"svelte",
+			"templ",
+			"toml",
+			"typescript",
+			"typescriptreact",
+			"twig",
+			"vue",
+			"yaml",
+			"yaml.docker-compose",
+			"yaml.ghaction",
+			"yaml.gitlab",
+			"yaml.helm-values",
+			"zsh",
+		},
 		dependencies = {
 			{
 				"mason-org/mason.nvim",
@@ -15,46 +97,61 @@ return {
 			"saghen/blink.cmp",
 		},
 		config = function()
+			local folds = require("core.folds")
 			local lsp_highlight_buffers = {}
 			local highlight_augroup = vim.api.nvim_create_augroup("lsp-highlight", { clear = true })
 			local detach_augroup = vim.api.nvim_create_augroup("lsp-detach", { clear = true })
-			local folding_augroup = vim.api.nvim_create_augroup("lsp-folding", { clear = true })
-			local function set_folds(bufnr, foldexpr, foldmethod)
-				for _, win in ipairs(vim.fn.win_findbuf(bufnr)) do
-					vim.wo[win][0].foldmethod = foldmethod
-					vim.wo[win][0].foldexpr = foldexpr
-				end
+
+			local function disable_document_highlight(bufnr)
+				vim.lsp.util.buf_clear_references(bufnr)
+				vim.api.nvim_clear_autocmds({ group = highlight_augroup, buffer = bufnr })
+				vim.api.nvim_clear_autocmds({ group = detach_augroup, buffer = bufnr })
+				lsp_highlight_buffers[bufnr] = nil
 			end
 
-			vim.api.nvim_create_autocmd("BufWinEnter", {
-				group = folding_augroup,
-				callback = function(event)
-					if next(vim.lsp.get_clients({ bufnr = event.buf, method = "textDocument/foldingRange" })) then
-						set_folds(event.buf, "v:lua.vim.lsp.foldexpr()", "expr")
-					end
-				end,
-			})
+			local function setup_client_features(client, bufnr)
+				if
+					client:supports_method("textDocument/documentHighlight", bufnr)
+					and not lsp_highlight_buffers[bufnr]
+				then
+					lsp_highlight_buffers[bufnr] = true
+					vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+						buffer = bufnr,
+						group = highlight_augroup,
+						callback = vim.lsp.buf.document_highlight,
+					})
 
-			vim.api.nvim_create_autocmd("LspDetach", {
-				group = folding_augroup,
-				callback = function(event)
-					for _, client in ipairs(vim.lsp.get_clients({ bufnr = event.buf })) do
-						if
-							client.id ~= event.data.client_id
-							and client:supports_method("textDocument/foldingRange", event.buf)
-						then
-							return
-						end
-					end
+					vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+						buffer = bufnr,
+						group = highlight_augroup,
+						callback = vim.lsp.buf.clear_references,
+					})
 
-					local ok, parser = pcall(vim.treesitter.get_parser, event.buf)
-					if ok and parser then
-						set_folds(event.buf, "v:lua.vim.treesitter.foldexpr()", "expr")
-					else
-						set_folds(event.buf, "0", "manual")
-					end
-				end,
-			})
+					vim.api.nvim_create_autocmd("LspDetach", {
+						buffer = bufnr,
+						group = detach_augroup,
+						callback = function(event)
+							for _, attached in ipairs(vim.lsp.get_clients({ bufnr = event.buf })) do
+								if
+									attached.id ~= event.data.client_id
+									and attached:supports_method("textDocument/documentHighlight", event.buf)
+								then
+									return
+								end
+							end
+
+							disable_document_highlight(event.buf)
+						end,
+					})
+				elseif
+					lsp_highlight_buffers[bufnr]
+					and not next(vim.lsp.get_clients({ bufnr = bufnr, method = "textDocument/documentHighlight" }))
+				then
+					disable_document_highlight(bufnr)
+				end
+
+				folds.update(bufnr)
+			end
 
 			vim.api.nvim_create_autocmd("LspAttach", {
 				group = vim.api.nvim_create_augroup("lsp-attach", { clear = true }),
@@ -68,62 +165,42 @@ return {
 							require("telescope.builtin")[picker]()
 						end
 					end
+					local code_action = function()
+						pcall(require, "telescope")
+						vim.lsp.buf.code_action()
+					end
 
 					map("gd", telescope("lsp_definitions"), "[G]oto [D]efinition")
-					map("gr", telescope("lsp_references"), "[G]oto [R]eferences")
+					map("grr", telescope("lsp_references"), "[G]oto [R]eferences")
 					map("gI", telescope("lsp_implementations"), "[G]oto [I]mplementation")
 					map("<leader>D", telescope("lsp_type_definitions"), "Type [D]efinition")
 					map("<leader>ds", telescope("lsp_document_symbols"), "[D]ocument [S]ymbols")
 					map("<leader>ws", telescope("lsp_dynamic_workspace_symbols"), "[W]orkspace [S]ymbols")
 					map("<leader>rn", vim.lsp.buf.rename, "[R]e[n]ame")
-					map("<leader>ca", vim.lsp.buf.code_action, "[C]ode [A]ction", { "n", "x" })
+					map("<leader>ca", code_action, "[C]ode [A]ction", { "n", "x" })
 					map("K", vim.lsp.buf.hover, "Hover Documentation")
 					map("gD", vim.lsp.buf.declaration, "[G]oto [D]eclaration")
 
 					local client = vim.lsp.get_client_by_id(event.data.client_id)
-					if
-						client
-						and client:supports_method("textDocument/documentHighlight", event.buf)
-						and not lsp_highlight_buffers[event.buf]
-					then
-						lsp_highlight_buffers[event.buf] = true
-						vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-							buffer = event.buf,
-							group = highlight_augroup,
-							callback = vim.lsp.buf.document_highlight,
-						})
-
-						vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-							buffer = event.buf,
-							group = highlight_augroup,
-							callback = vim.lsp.buf.clear_references,
-						})
-
-						vim.api.nvim_create_autocmd("LspDetach", {
-							buffer = event.buf,
-							group = detach_augroup,
-							callback = function(event2)
-								for _, attached in ipairs(vim.lsp.get_clients({ bufnr = event2.buf })) do
-									if
-										attached.id ~= event2.data.client_id
-										and attached:supports_method("textDocument/documentHighlight", event2.buf)
-									then
-										return
-									end
-								end
-
-								vim.lsp.buf.clear_references()
-								vim.api.nvim_clear_autocmds({ group = highlight_augroup, buffer = event2.buf })
-								lsp_highlight_buffers[event2.buf] = nil
-							end,
-						})
-					end
-
-					if client and client:supports_method("textDocument/foldingRange", event.buf) then
-						set_folds(event.buf, "v:lua.vim.lsp.foldexpr()", "expr")
+					if client then
+						setup_client_features(client, event.buf)
 					end
 				end,
 			})
+
+			for _, method in ipairs({ "client/registerCapability", "client/unregisterCapability" }) do
+				local handler = vim.lsp.handlers[method]
+				vim.lsp.handlers[method] = function(err, result, context, config)
+					local response = handler(err, result, context, config)
+					local client = vim.lsp.get_client_by_id(context.client_id)
+					if client then
+						for bufnr in pairs(client.attached_buffers) do
+							setup_client_features(client, bufnr)
+						end
+					end
+					return response
+				end
+			end
 
 			local lsp_servers = {
 				"vtsls",
@@ -153,11 +230,6 @@ return {
 				"intelephense",
 			}
 
-			local capabilities = require("blink.cmp").get_lsp_capabilities()
-			vim.lsp.config("*", {
-				capabilities = capabilities,
-			})
-
 			local vue_language_server_path = vim.fn.stdpath("data")
 				.. "/mason/packages/vue-language-server/node_modules/@vue/language-server"
 			local vue_plugin = {
@@ -179,6 +251,21 @@ return {
 					enumMemberValues = { enabled = true },
 				},
 			}
+			local kubernetes_schema_version = vim.g.kubernetes_schema_version or "master"
+			local kubernetes_schema_directory = kubernetes_schema_version == "master" and "master-standalone-strict"
+				or kubernetes_schema_version .. "-standalone-strict"
+			local kubernetes_schema_url = "https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/"
+				.. kubernetes_schema_directory
+				.. "/all.json"
+
+			local function is_neovim_lua_workspace(path)
+				if path == vim.fn.stdpath("config") then
+					return true
+				end
+
+				return vim.uv.fs_stat(path .. "/lua") ~= nil
+					and (vim.uv.fs_stat(path .. "/plugin") ~= nil or vim.uv.fs_stat(path .. "/after") ~= nil)
+			end
 
 			---@type table<string, vim.lsp.Config>
 			local server_configs = {
@@ -250,7 +337,7 @@ return {
 					},
 				},
 				yamlls = {
-					filetypes = { "yaml", "yaml.docker-compose", "yaml.gitlab", "yaml.helm-values", "yaml.ghaction" },
+					filetypes = { "yaml", "yaml.gitlab", "yaml.ghaction" },
 					settings = {
 						redhat = { telemetry = { enabled = false } },
 						yaml = {
@@ -262,7 +349,7 @@ return {
 								url = "https://www.schemastore.org/api/json/catalog.json",
 							},
 							schemas = {
-								["https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.30.0-standalone-strict/all.json"] = {
+								[kubernetes_schema_url] = {
 									"k8s/**/*.yaml",
 									"k8s/**/*.yml",
 									"kubernetes/**/*.yaml",
@@ -312,14 +399,9 @@ return {
 				marksman = {},
 				lua_ls = {
 					on_init = function(client)
-						if client.workspace_folders then
-							local path = client.workspace_folders[1].name
-							if
-								path ~= vim.fn.stdpath("config")
-								and (vim.uv.fs_stat(path .. "/.luarc.json") or vim.uv.fs_stat(path .. "/.luarc.jsonc"))
-							then
-								return
-							end
+						local path = client.workspace_folders and client.workspace_folders[1].name
+						if not path or not is_neovim_lua_workspace(path) then
+							return
 						end
 						client.config.settings.Lua = vim.tbl_deep_extend("force", client.config.settings.Lua, {
 							runtime = {
@@ -345,9 +427,10 @@ return {
 				vim.lsp.config(name, server_configs[name] or {})
 			end
 
+			local smoke_test = vim.env.NVIM_CONFIG_TEST == "smoke"
 			require("mason-lspconfig").setup({
-				ensure_installed = lsp_servers,
-				automatic_enable = lsp_servers,
+				ensure_installed = smoke_test and {} or lsp_servers,
+				automatic_enable = smoke_test and false or lsp_servers,
 			})
 		end,
 	},

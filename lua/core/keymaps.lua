@@ -2,12 +2,12 @@ vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 vim.keymap.set("n", "<leader>q", vim.diagnostic.setqflist, { desc = "Open diagnostic [Q]uickfix list" })
 
-vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
+vim.keymap.set("t", "<C-q>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
 -- Reload/evaluate current Lua config while editing it.
-vim.keymap.set("n", "<leader><leader>x", "<cmd>source %<CR>", { desc = "Source current file" })
-vim.keymap.set("n", "<leader>x", ":.lua<CR>", { desc = "Execute current Lua line" })
-vim.keymap.set("v", "<leader>x", ":lua<CR>", { desc = "Execute selected Lua" })
+vim.keymap.set("n", "<leader>cS", "<cmd>source %<CR>", { desc = "Source current file" })
+vim.keymap.set("n", "<leader>cx", ":.lua<CR>", { desc = "Execute current Lua line" })
+vim.keymap.set("v", "<leader>cx", ":lua<CR>", { desc = "Execute selected Lua" })
 
 -- Split navigation.
 vim.keymap.set("n", "<C-h>", "<C-w><C-h>", { desc = "Move focus to the left window" })

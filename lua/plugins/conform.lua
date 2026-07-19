@@ -13,7 +13,7 @@ return {
 		},
 	},
 	opts = {
-		notify_on_error = false,
+		notify_on_error = true,
 		format_on_save = {
 			timeout_ms = 1500,
 			lsp_format = "fallback",
@@ -45,17 +45,21 @@ return {
 			sql = { "sqlfluff" },
 		},
 		formatters = {
-			sqlfluff = {
-				require_cwd = false,
-				args = function()
-					local args = { "fix" }
-					if vim.g.sqlfluff_dialect then
-						vim.list_extend(args, { "--dialect", vim.g.sqlfluff_dialect })
-					end
-					table.insert(args, "-")
-					return args
-				end,
-			},
+			sqlfluff = function()
+				local dialect = vim.g.sqlfluff_dialect
+				dialect = type(dialect) == "string" and dialect ~= "" and dialect or nil
+				return {
+					require_cwd = not dialect,
+					args = function()
+						local args = { "fix" }
+						if dialect then
+							vim.list_extend(args, { "--dialect", dialect })
+						end
+						table.insert(args, "-")
+						return args
+					end,
+				}
+			end,
 		},
 	},
 }
