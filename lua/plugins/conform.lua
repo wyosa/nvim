@@ -1,3 +1,5 @@
+-- Format on save and with <leader>f. Skip large files.
+
 return {
 	"stevearc/conform.nvim",
 	event = { "BufWritePre" },
@@ -14,10 +16,13 @@ return {
 	},
 	opts = {
 		notify_on_error = true,
-		format_on_save = {
-			timeout_ms = 1500,
-			lsp_format = "fallback",
-		},
+		format_on_save = function(bufnr)
+			if vim.b[bufnr].disable_autoformat or require("core.large_file").is_large(bufnr) then
+				return
+			end
+			return { timeout_ms = 1500, lsp_format = "fallback" }
+		end,
+		-- Order matters: stop_after_first selects the first available formatter.
 		formatters_by_ft = {
 			lua = { "stylua" },
 
@@ -30,6 +35,7 @@ return {
 			css = { "prettierd", "prettier", stop_after_first = true },
 			scss = { "prettierd", "prettier", stop_after_first = true },
 			html = { "prettierd", "prettier", stop_after_first = true },
+			htmlangular = { "prettier" },
 			json = { "prettierd", "prettier", stop_after_first = true },
 			jsonc = { "prettierd", "prettier", stop_after_first = true },
 			yaml = { "prettierd", "prettier", stop_after_first = true },
@@ -45,6 +51,8 @@ return {
 			sql = { "sqlfluff" },
 		},
 		formatters = {
+			prettier = { options = { ft_parsers = { htmlangular = "angular" } } },
+			-- Get the SQL dialect from a global setting or the project's configuration.
 			sqlfluff = function()
 				local dialect = vim.g.sqlfluff_dialect
 				dialect = type(dialect) == "string" and dialect ~= "" and dialect or nil

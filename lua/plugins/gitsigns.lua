@@ -1,3 +1,5 @@
+-- Git signs, navigation and actions on changed hunks.
+
 return {
 	{
 		"lewis6991/gitsigns.nvim",
@@ -14,7 +16,7 @@ return {
 					vim.keymap.set(mode, l, r, opts)
 				end
 
-				-- Navigation
+				-- Navigate between changed hunks.
 				map("n", "]c", function()
 					if vim.wo.diff then
 						vim.cmd.normal({ "]c", bang = true })
@@ -31,19 +33,19 @@ return {
 					end
 				end, { desc = "Jump to previous git [c]hange" })
 
-				-- Actions
-				-- visual mode
+				-- Actions on Git changes.
+				-- Selected range.
 				map("v", "<leader>hs", function()
 					gitsigns.stage_hunk({ vim.fn.line("."), vim.fn.line("v") })
 				end, { desc = "git [s]tage hunk" })
 				map("v", "<leader>hr", function()
 					gitsigns.reset_hunk({ vim.fn.line("."), vim.fn.line("v") })
 				end, { desc = "git [r]eset hunk" })
-				-- normal mode
-				map("n", "<leader>hs", gitsigns.stage_hunk, { desc = "git [s]tage hunk" })
+				-- Current hunk or entire buffer.
+				map("n", "<leader>hs", gitsigns.stage_hunk, { desc = "git toggle [s]taging of hunk" })
 				map("n", "<leader>hr", gitsigns.reset_hunk, { desc = "git [r]eset hunk" })
 				map("n", "<leader>hS", gitsigns.stage_buffer, { desc = "git [S]tage buffer" })
-				map("n", "<leader>hu", gitsigns.undo_stage_hunk, { desc = "git [u]ndo stage hunk" })
+				map("n", "<leader>hu", gitsigns.stage_hunk, { desc = "git toggle staging of h[u]nk" })
 				map("n", "<leader>hR", gitsigns.reset_buffer, { desc = "git [R]eset buffer" })
 				map("n", "<leader>hp", gitsigns.preview_hunk, { desc = "git [p]review hunk" })
 				map("n", "<leader>hb", gitsigns.blame_line, { desc = "git [b]lame line" })
@@ -56,7 +58,7 @@ return {
 					gitsigns.setqflist("all")
 				end, { desc = "git hunks to [q]uickfix" })
 				map("n", "<leader>hl", gitsigns.setloclist, { desc = "git hunks to [l]oclist" })
-				-- Toggles
+				-- Show line authors and preview deleted lines.
 				map("n", "<leader>tb", gitsigns.toggle_current_line_blame, { desc = "[T]oggle git show [b]lame line" })
 				map("n", "<leader>tD", gitsigns.preview_hunk_inline, { desc = "Preview [D]eleted lines inline" })
 			end,

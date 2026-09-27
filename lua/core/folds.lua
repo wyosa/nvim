@@ -1,3 +1,5 @@
+-- Folding preference: LSP, then Tree-sitter, then manual folds.
+
 local M = {}
 
 local function set_folds(bufnr, foldexpr, foldmethod)
@@ -9,6 +11,10 @@ end
 
 function M.update(bufnr)
 	if not vim.api.nvim_buf_is_valid(bufnr) or vim.bo[bufnr].buftype ~= "" then
+		return
+	end
+	if require("core.large_file").is_large(bufnr) then
+		set_folds(bufnr, "0", "manual")
 		return
 	end
 

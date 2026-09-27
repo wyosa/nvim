@@ -1,5 +1,8 @@
+-- Check Lua syntax, lock entries, file types and SQL injection queries.
+
 local script = debug.getinfo(1, "S").source:sub(2)
 local root = vim.fs.dirname(vim.fs.dirname(script))
+vim.opt.rtp:prepend(root)
 
 local function read(path)
 	return table.concat(vim.fn.readfile(path), "\n")
@@ -22,6 +25,19 @@ local lazy_commit = read(root .. "/lua/core/lazy.lua"):match('local lazy_commit 
 assert(lazy_commit == lock["lazy.nvim"].commit, "lazy.nvim bootstrap pin differs from lazy-lock.json")
 
 dofile(root .. "/lua/core/filetypes.lua")
+for filename, expected in pairs({
+	["compose.override.yaml"] = "yaml.docker-compose",
+	["docker-compose.prod.yml"] = "yaml.docker-compose",
+	["compose-not-a-config.yaml"] = "yaml",
+	[".github/workflows/ci.yaml"] = "yaml.ghaction",
+	[".github/workflows/action.yml"] = "yaml.ghaction",
+	["action.yml"] = "yaml.github-action",
+	[".github/action.yaml"] = "yaml.github-action",
+	[".github/actions/build/action.yml"] = "yaml.github-action",
+	[".gitlab-ci.yml"] = "yaml.gitlab",
+}) do
+	assert(vim.filetype.match({ filename = root .. "/tests/fixtures/" .. filename }) == expected, filename)
+end
 assert(
 	vim.filetype.match({ filename = root .. "/tests/fixtures/compose.yaml" }) == "yaml.docker-compose",
 	"Docker Compose filetype not detected"
@@ -55,7 +71,7 @@ local function check_injection(language, expected_node, expected_matches)
 	assert(content_id, "Missing injection.content capture for " .. language)
 
 	local found = 0
-	for _, match, metadata in query:iter_matches(tree:root(), bufnr, 0, -1, { all = true }) do
+	for _, match, metadata in query:iter_matches(tree:root(), bufnr, 0, -1) do
 		if metadata["injection.language"] == "sql" then
 			local nodes = match[content_id] or {}
 			for _, node in ipairs(nodes) do

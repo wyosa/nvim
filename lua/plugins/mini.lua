@@ -1,6 +1,8 @@
+-- Automatic pairs, text objects and bracket/quote operations.
+
 return {
 	{
-		"echasnovski/mini.nvim",
+		"nvim-mini/mini.nvim",
 		event = { "VeryLazy", "InsertEnter" },
 		config = function()
 			require("mini.pairs").setup()

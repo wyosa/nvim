@@ -1,3 +1,5 @@
+-- Shell, Docker, YAML, Markdown and SQL linters, delayed after changes.
+
 return {
 	"mfussenegger/nvim-lint",
 	ft = {
@@ -9,6 +11,7 @@ return {
 		"yaml",
 		"yaml.docker-compose",
 		"yaml.ghaction",
+		"yaml.github-action",
 		"yaml.gitlab",
 		"yaml.helm-values",
 	},
@@ -30,6 +33,7 @@ return {
 			return type(dialect) == "string" and dialect ~= "" and dialect or nil
 		end
 
+		-- Skip missing tools and SQL files without a configured dialect.
 		local function linter_is_available(linter, dialect, sqlfluff_root)
 			if linter.name == "sqlfluff" and not dialect and not sqlfluff_root then
 				vim.notify_once("Skipping sqlfluff: no dialect or project config found", vim.log.levels.WARN)
@@ -63,6 +67,7 @@ return {
 		local lint_augroup = vim.api.nvim_create_augroup("lint", { clear = true })
 		local lint_tokens = {}
 		local last_linted = {}
+		-- After 200 ms, lint only the latest buffer revision.
 		local function schedule_lint(bufnr)
 			local tick = vim.api.nvim_buf_get_changedtick(bufnr)
 			if last_linted[bufnr] == tick then

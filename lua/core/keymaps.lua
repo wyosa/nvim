@@ -1,21 +1,23 @@
+-- Global keybindings. Space is <leader>; each plugin declares its own bindings.
+
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 vim.keymap.set("n", "<leader>q", vim.diagnostic.setqflist, { desc = "Open diagnostic [Q]uickfix list" })
 
 vim.keymap.set("t", "<C-q>", "<C-\\><C-n>", { desc = "Exit terminal mode" })
 
--- Reload/evaluate current Lua config while editing it.
+-- Apply the current Lua file, line or selected fragment.
 vim.keymap.set("n", "<leader>cS", "<cmd>source %<CR>", { desc = "Source current file" })
 vim.keymap.set("n", "<leader>cx", ":.lua<CR>", { desc = "Execute current Lua line" })
 vim.keymap.set("v", "<leader>cx", ":lua<CR>", { desc = "Execute selected Lua" })
 
--- Split navigation.
+-- Move between split windows.
 vim.keymap.set("n", "<C-h>", "<C-w><C-h>", { desc = "Move focus to the left window" })
 vim.keymap.set("n", "<C-l>", "<C-w><C-l>", { desc = "Move focus to the right window" })
 vim.keymap.set("n", "<C-j>", "<C-w><C-j>", { desc = "Move focus to the lower window" })
 vim.keymap.set("n", "<C-k>", "<C-w><C-k>", { desc = "Move focus to the upper window" })
 
--- Split resize.
+-- Move the shared border between adjacent windows.
 local function resize_split(direction)
 	local current = vim.api.nvim_get_current_win()
 	local vertical = direction == "h" or direction == "l"
@@ -55,6 +57,7 @@ vim.keymap.set("n", "<M-k>", function()
 	resize_split("k")
 end, { desc = "Move split border up" })
 
+-- <leader>t toggles diagnostics, hints, spelling and text display options.
 vim.keymap.set("n", "<leader>td", function()
 	vim.diagnostic.enable(not vim.diagnostic.is_enabled())
 end, { desc = "[T]oggle [D]iagnostics" })
@@ -79,3 +82,8 @@ end, { desc = "[T]oggle [W]rap" })
 vim.keymap.set("n", "<leader>tl", function()
 	vim.wo.list = not vim.wo.list
 end, { desc = "[T]oggle [L]ist chars" })
+
+vim.keymap.set("n", "<leader>tf", function()
+	vim.b.disable_autoformat = not vim.b.disable_autoformat
+	vim.notify("Format on save: " .. (vim.b.disable_autoformat and "off" or "on"))
+end, { desc = "[T]oggle [F]ormat on save (buffer)" })

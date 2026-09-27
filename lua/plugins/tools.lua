@@ -1,3 +1,5 @@
+-- Formatting and analysis tools installed by Mason.
+
 return {
 	"WhoIsSethDaniel/mason-tool-installer.nvim",
 	event = "VimEnter",
@@ -10,6 +12,7 @@ return {
 			"golines",
 			"hadolint",
 			"markdownlint-cli2",
+			"prettier",
 			"prettierd",
 			"shellcheck",
 			"shfmt",
