@@ -1,3 +1,5 @@
+-- Status line: file, Git, diagnostics, connected LSP servers and debugger state.
+
 local function lsp_clients()
 	local clients = vim.lsp.get_clients({ bufnr = 0 })
 	if #clients == 0 then

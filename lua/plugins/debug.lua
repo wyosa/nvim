@@ -1,3 +1,5 @@
+-- DAP debugging: keybindings, interface, Go and Python.
+
 return {
 	"mfussenegger/nvim-dap",
 	dependencies = {
@@ -8,6 +10,7 @@ return {
 		"leoluz/nvim-dap-go",
 		"theHamsta/nvim-dap-virtual-text",
 	},
+	-- F5/F10/F11/F12 control execution; <leader>d provides the other debug actions.
 	keys = {
 		{
 			"<F5>",
@@ -148,6 +151,7 @@ return {
 			return fallback or name
 		end
 
+		-- Prefer the active environment, then the project's .venv, then system Python.
 		local function python_path()
 			if vim.env.VIRTUAL_ENV then
 				return vim.env.VIRTUAL_ENV .. "/bin/python"
@@ -181,6 +185,7 @@ return {
 			},
 		})
 
+		-- Debugger interface and breakpoint symbols.
 		dapui.setup({
 			icons = { expanded = "v", collapsed = ">", current_frame = "*" },
 			controls = {
@@ -219,6 +224,7 @@ return {
 			},
 		})
 
+		-- Python: launch a file, attach to a port or select a process.
 		dap.configurations.python = {
 			{
 				type = "python",

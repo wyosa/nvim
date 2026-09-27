@@ -1,3 +1,5 @@
+-- Keybinding group labels shown after pressing <leader>.
+
 return {
 	"folke/which-key.nvim",
 	event = "VeryLazy",

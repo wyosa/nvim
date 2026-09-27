@@ -1,125 +1,116 @@
 ;extends
+; Extend the standard Tree-sitter queries with embedded language highlighting.
 
-; query
-;; string sql injection
+; Highlight SQL using a marker at the start of the string.
 ((string_fragment) @injection.content
-                   (#match? @injection.content "^(\r\n|\r|\n)*-{2,}( )*[sS][qQ][lL]")
-                   (#set! injection.language "sql"))
-        
-; query
-;; string javascript injection
+  (#match? @injection.content "^(\r\n|\r|\n)*-{2,}( )*[sS][qQ][lL]")
+  (#set! injection.language "sql"))
+
+; Highlight JavaScript using a marker at the start of the string.
 ((string_fragment) @injection.content
-                   (#match? @injection.content "^(\r\n|\r|\n)*/{2,}( )*[jJ][aA][vV][aA][sS][cC][rR][iI][pP][tT]")
-                   (#set! injection.language "javascript"))
-        
-; query
-;; string typescript injection
+  (#match? @injection.content "^(\r\n|\r|\n)*/{2,}( )*[jJ][aA][vV][aA][sS][cC][rR][iI][pP][tT]")
+  (#set! injection.language "javascript"))
+
+; Highlight TypeScript using a marker at the start of the string.
 ((string_fragment) @injection.content
-                   (#match? @injection.content "^(\r\n|\r|\n)//+( )*[tT][yY][pP][eE][sS][cC][rR][iI][pP][tT]")
-                   (#set! injection.language "typescript"))
-        
-; query
-;; string html injection
+  (#match? @injection.content "^(\r\n|\r|\n)//+( )*[tT][yY][pP][eE][sS][cC][rR][iI][pP][tT]")
+  (#set! injection.language "typescript"))
+
+; Highlight HTML using a marker at the start of the string.
 ((string_fragment) @injection.content
-                   (#match? @injection.content "^(\r\n|\r|\n)\\<\\!-{2,}( )*[hH][tT][mM][lL]( )*-{2,}\\>")
-                   (#set! injection.language "html"))
-        
-; query
-;; string css injection
+  (#match? @injection.content "^(\r\n|\r|\n)\\<\\!-{2,}( )*[hH][tT][mM][lL]( )*-{2,}\\>")
+  (#set! injection.language "html"))
+
+; Highlight CSS using a marker at the start of the string.
 ((string_fragment) @injection.content
-                   (#match? @injection.content "^(\r\n|\r|\n)/\\*+( )*[cC][sS][sS]( )*\\*+/")
-                   (#set! injection.language "css"))
-        
-; query
-;; string python injection
+  (#match? @injection.content "^(\r\n|\r|\n)/\\*+( )*[cC][sS][sS]( )*\\*+/")
+  (#set! injection.language "css"))
+
+; Highlight Python using a marker at the start of the string.
 ((string_fragment) @injection.content
-                   (#match? @injection.content "^(\r\n|\r|\n)*#+( )*[pP][yY][tT][hH][oO][nN]")
-                   (#set! injection.language "python"))
-        
-; query
-;; comment sql injection
+  (#match? @injection.content "^(\r\n|\r|\n)*#+( )*[pP][yY][tT][hH][oO][nN]")
+  (#set! injection.language "python"))
+
+; Highlight SQL using the comment before the string.
 ((comment)
- @comment .
- (lexical_declaration
-   (variable_declarator
-     value: [
-             (string(string_fragment)@injection.content)
-             (template_string(string_fragment)@injection.content)
-             ])
-   )
+  @comment .
+  (lexical_declaration
+    (variable_declarator
+      value: [
+        (string (string_fragment) @injection.content)
+        (template_string (string_fragment) @injection.content)
+    ])
+  )
   (#match? @comment "^//+( )*[sS][qQ][lL]( )*")
   (#set! injection.language "sql")
- )
-; query
-;; comment javascript injection
+)
+
+; Highlight JavaScript using the comment before the string.
 ((comment)
- @comment .
- (lexical_declaration
-   (variable_declarator
-     value: [
-             (string(string_fragment)@injection.content)
-             (template_string(string_fragment)@injection.content)
-             ])
-   )
+  @comment .
+  (lexical_declaration
+    (variable_declarator
+      value: [
+        (string (string_fragment) @injection.content)
+        (template_string (string_fragment) @injection.content)
+    ])
+  )
   (#match? @comment "^//+( )*[jJ][aA][vV][aA][sS][cC][rR][iI][pP][tT]( )*")
   (#set! injection.language "javascript")
- )
-; query
-;; comment typescript injection
+)
+
+; Highlight TypeScript using the comment before the string.
 ((comment)
- @comment .
- (lexical_declaration
-   (variable_declarator
-     value: [
-             (string(string_fragment)@injection.content)
-             (template_string(string_fragment)@injection.content)
-             ])
-   )
+  @comment .
+  (lexical_declaration
+    (variable_declarator
+      value: [
+        (string (string_fragment) @injection.content)
+        (template_string (string_fragment) @injection.content)
+    ])
+  )
   (#match? @comment "^//+( )*[tT][yY][pP][eE][sS][cC][rR][iI][pP][tT]( )*")
   (#set! injection.language "typescript")
- )
-        
-; query
-;; comment html injection
+)
+
+; Highlight HTML using the comment before the string.
 ((comment)
- @comment .
- (lexical_declaration
-   (variable_declarator
-     value: [
-             (string(string_fragment)@injection.content)
-             (template_string(string_fragment)@injection.content)
-             ])
-   )
+  @comment .
+  (lexical_declaration
+    (variable_declarator
+      value: [
+        (string (string_fragment) @injection.content)
+        (template_string (string_fragment) @injection.content)
+    ])
+  )
   (#match? @comment "^//+( )*[hH][tT][mM][lL]( )*")
   (#set! injection.language "html")
- )
-        
-; query
-;; comment css injection
+)
+
+; Highlight CSS using the comment before the string.
 ((comment)
- @comment .
- (lexical_declaration
-   (variable_declarator
-     value: [
-             (string(string_fragment)@injection.content)
-             (template_string(string_fragment)@injection.content)
-             ])
-   )
+  @comment .
+  (lexical_declaration
+    (variable_declarator
+      value: [
+        (string (string_fragment) @injection.content)
+        (template_string (string_fragment) @injection.content)
+    ])
+  )
   (#match? @comment "^//+( )*[cC][sS][sS]( )*")
   (#set! injection.language "css")
- )
-        
-; query
-;; comment python injection
+)
+
+; Highlight Python using the comment before the string.
 ((comment)
- @comment .
- (lexical_declaration
-   (variable_declarator
-     value: [
-             (string(string_fragment)@injection.content)
-             (template_string(string_fragment)@injection.content)
-             ])
-   )
+  @comment .
+  (lexical_declaration
+    (variable_declarator
+      value: [
+        (string (string_fragment) @injection.content)
+        (template_string (string_fragment) @injection.content)
+    ])
+  )
   (#match? @comment "^//+( )*[pP][yY][tT][hH][oO][nN]( )*")
   (#set! injection.language "python")
- )
+)

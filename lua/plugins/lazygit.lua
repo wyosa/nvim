@@ -1,3 +1,5 @@
+-- Open LazyGit inside Neovim with <leader>gl.
+
 return {
 	"kdheepak/lazygit.nvim",
 	lazy = true,
@@ -8,12 +10,11 @@ return {
 		"LazyGitFilter",
 		"LazyGitFilterCurrentFile",
 	},
-	-- optional for floating window border decoration
+	-- Floating window decoration.
 	dependencies = {
 		"nvim-lua/plenary.nvim",
 	},
-	-- setting the keybinding for LazyGit with 'keys' is recommended in
-	-- order to load the plugin when the command is run for the first time
+	-- Load the plugin on the first use of this keybinding.
 	keys = {
 		{ "<leader>gl", "<cmd>LazyGit<cr>", desc = "LazyGit" },
 	},

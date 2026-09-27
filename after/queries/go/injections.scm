@@ -1,68 +1,69 @@
 ;extends
+; Extend the standard Tree-sitter queries with embedded language highlighting.
 
-              ((comment) @comment
-                .
-                [
-                  (short_var_declaration
-                    right: (expression_list
-                      (raw_string_literal (raw_string_literal_content) @injection.content)))
-                  (assignment_statement
-                    right: (expression_list
-                      (raw_string_literal (raw_string_literal_content) @injection.content)))
-                  (var_declaration
-                    (var_spec
-                      value: (expression_list
-                        (raw_string_literal (raw_string_literal_content) @injection.content))))
-                  (call_expression
-                    arguments: (argument_list
-                      (raw_string_literal (raw_string_literal_content) @injection.content)))
-                ]
-                (#match? @comment "^//\\s*sql\\s*$|^/\\*\\s*sql\\s*\\*/$")
-                (#not-match? @injection.content "^\\_s*\\c(select|insert|update|delete|with|create|alter|drop|truncate|merge)")
-                (#set! injection.language "sql"))
-            
-              ((comment) @comment
-                .
-                [
-                  (short_var_declaration
-                    right: (expression_list
-                      (raw_string_literal (raw_string_literal_content) @injection.content)))
-                  (assignment_statement
-                    right: (expression_list
-                      (raw_string_literal (raw_string_literal_content) @injection.content)))
-                  (var_declaration
-                    (var_spec
-                      value: (expression_list
-                        (raw_string_literal (raw_string_literal_content) @injection.content))))
-                  (call_expression
-                    arguments: (argument_list
-                      (raw_string_literal (raw_string_literal_content) @injection.content)))
-                ]
-                (#match? @comment "^//\\s*postgresql\\s*$|^/\\*\\s*postgresql\\s*\\*/$")
-                (#not-match? @injection.content "^\\_s*\\c(select|insert|update|delete|with|create|alter|drop|truncate|merge)")
-                (#set! injection.language "sql"))
-            
-              ((comment) @comment
-                .
-                [
-                  (short_var_declaration
-                    right: (expression_list
-                      (raw_string_literal (raw_string_literal_content) @injection.content)))
-                  (assignment_statement
-                    right: (expression_list
-                      (raw_string_literal (raw_string_literal_content) @injection.content)))
-                  (var_declaration
-                    (var_spec
-                      value: (expression_list
-                        (raw_string_literal (raw_string_literal_content) @injection.content))))
-                  (call_expression
-                    arguments: (argument_list
-                      (raw_string_literal (raw_string_literal_content) @injection.content)))
-                ]
-                (#match? @comment "^//\\s*clickhouse\\s*$|^/\\*\\s*clickhouse\\s*\\*/$")
-                (#not-match? @injection.content "^\\_s*\\c(select|insert|update|delete|with|create|alter|drop|truncate|merge)")
-                (#set! injection.language "sql"))
+((comment) @comment
+  .
+  [
+    (short_var_declaration
+      right: (expression_list
+        (raw_string_literal (raw_string_literal_content) @injection.content)))
+    (assignment_statement
+      right: (expression_list
+        (raw_string_literal (raw_string_literal_content) @injection.content)))
+    (var_declaration
+      (var_spec
+        value: (expression_list
+          (raw_string_literal (raw_string_literal_content) @injection.content))))
+    (call_expression
+      arguments: (argument_list
+        (raw_string_literal (raw_string_literal_content) @injection.content)))
+  ]
+  (#match? @comment "^//\\s*sql\\s*$|^/\\*\\s*sql\\s*\\*/$")
+  (#not-match? @injection.content "^\\_s*\\c(select|insert|update|delete|with|create|alter|drop|truncate|merge)")
+  (#set! injection.language "sql"))
 
-              ((raw_string_literal (raw_string_literal_content) @injection.content)
-                (#match? @injection.content "^\\_s*\\c(select|insert|update|delete|with|create|alter|drop|truncate|merge)")
-                (#set! injection.language "sql"))
+((comment) @comment
+  .
+  [
+    (short_var_declaration
+      right: (expression_list
+        (raw_string_literal (raw_string_literal_content) @injection.content)))
+    (assignment_statement
+      right: (expression_list
+        (raw_string_literal (raw_string_literal_content) @injection.content)))
+    (var_declaration
+      (var_spec
+        value: (expression_list
+          (raw_string_literal (raw_string_literal_content) @injection.content))))
+    (call_expression
+      arguments: (argument_list
+        (raw_string_literal (raw_string_literal_content) @injection.content)))
+  ]
+  (#match? @comment "^//\\s*postgresql\\s*$|^/\\*\\s*postgresql\\s*\\*/$")
+  (#not-match? @injection.content "^\\_s*\\c(select|insert|update|delete|with|create|alter|drop|truncate|merge)")
+  (#set! injection.language "sql"))
+
+((comment) @comment
+  .
+  [
+    (short_var_declaration
+      right: (expression_list
+        (raw_string_literal (raw_string_literal_content) @injection.content)))
+    (assignment_statement
+      right: (expression_list
+        (raw_string_literal (raw_string_literal_content) @injection.content)))
+    (var_declaration
+      (var_spec
+        value: (expression_list
+          (raw_string_literal (raw_string_literal_content) @injection.content))))
+    (call_expression
+      arguments: (argument_list
+        (raw_string_literal (raw_string_literal_content) @injection.content)))
+  ]
+  (#match? @comment "^//\\s*clickhouse\\s*$|^/\\*\\s*clickhouse\\s*\\*/$")
+  (#not-match? @injection.content "^\\_s*\\c(select|insert|update|delete|with|create|alter|drop|truncate|merge)")
+  (#set! injection.language "sql"))
+
+((raw_string_literal (raw_string_literal_content) @injection.content)
+  (#match? @injection.content "^\\_s*\\c(select|insert|update|delete|with|create|alter|drop|truncate|merge)")
+  (#set! injection.language "sql"))

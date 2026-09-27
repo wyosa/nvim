@@ -1,6 +1,8 @@
+-- Lists of diagnostics, symbols, LSP results, quickfix and location entries.
+
 return {
 	"folke/trouble.nvim",
-	opts = {}, -- for default options, refer to the configuration section for custom setup.
+	opts = {}, -- Use the plugin's default options.
 	cmd = "Trouble",
 	keys = {
 		{

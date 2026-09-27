@@ -1,3 +1,5 @@
+-- Search files, text, help and Git changes with Telescope.
+
 return {
 	{
 		"nvim-telescope/telescope.nvim",

@@ -1,3 +1,5 @@
+-- Completion sources: LSP, paths, snippets and buffer words.
+
 return {
 	"saghen/blink.cmp",
 	event = { "InsertEnter", "CmdlineEnter" },

@@ -1,3 +1,5 @@
+-- Diagnostic display: inline messages and details when jumping to a diagnostic.
+
 local virtual_text = {
 	source = "if_many",
 	spacing = 2,

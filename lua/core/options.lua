@@ -1,3 +1,5 @@
+-- Core editor behavior: files, indentation, search, windows and folds.
+
 vim.o.number = true
 vim.o.numberwidth = 1
 vim.o.relativenumber = true
@@ -5,7 +7,7 @@ vim.o.relativenumber = true
 vim.o.mouse = "a"
 vim.o.showmode = false
 
--- Sync clipboard between OS and Neovim.
+-- Use the system clipboard.
 vim.schedule(function()
 	vim.o.clipboard = "unnamedplus"
 end)
@@ -13,18 +15,18 @@ end)
 vim.o.breakindent = true
 vim.o.undofile = true
 
--- Protect unsaved changes and interrupted writes.
+-- Preserve recovery options for interrupted writes.
 vim.o.swapfile = true
 vim.o.backup = false
 vim.o.writebackup = true
 
--- Tabs.
+-- Default indentation; language-specific ftplugin files can override it.
 vim.o.tabstop = 3
 vim.o.shiftwidth = 3
 vim.o.softtabstop = 3
 vim.o.expandtab = true
 
--- Search.
+-- Search ignores case unless the query contains an uppercase character.
 vim.o.ignorecase = true
 vim.o.smartcase = true
 
@@ -44,7 +46,7 @@ vim.o.scrolloff = 10
 
 vim.o.confirm = true
 
--- update buffer content when file changes externally
+-- Reload files after external changes.
 vim.opt.autoread = true
 
 vim.opt.listchars = {
@@ -55,6 +57,7 @@ vim.opt.listchars = {
 	nbsp = "+",
 }
 
+-- Open files with all folds expanded.
 vim.opt.foldenable = true
 vim.opt.foldlevel = 99
 vim.opt.foldlevelstart = 99

@@ -1,9 +1,11 @@
+-- File tree: \ opens or closes it; O opens a file with its system application.
+
 return {
 	"nvim-neo-tree/neo-tree.nvim",
 	version = "*",
 	dependencies = {
 		"nvim-lua/plenary.nvim",
-		"nvim-tree/nvim-web-devicons", -- not strictly required, but recommended
+		"nvim-tree/nvim-web-devicons", -- File type icons.
 		"MunifTanjim/nui.nvim",
 	},
 	cmd = { "Neotree" },
